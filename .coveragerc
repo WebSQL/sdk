@@ -1,0 +1,11 @@
+[report]
+exclude_lines =
+    pragma: no cover
+    pass
+    def __repr__
+    # Don't complain if non-runnable code isn't run:
+    if 0:
+    if __name__ == .__main__.:
+
+[run]
+omit=*pyparsing*

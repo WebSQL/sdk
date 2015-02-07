@@ -1,56 +1,49 @@
-# SQL-toolchain
-
+SQL-toolchain
 The chain of tools to make work with SQL easier
 
-[![Build Status](https://travis-ci.org/WebSQL/sqltoolchain.svg?branch=master)](https://travis-ci.org/WebSQL/sqltoolchain)
-[![Coverage Status](https://coveralls.io/repos/WebSQL/sqltoolchain/badge.svg?branch=master)](https://coveralls.io/r/WebSQL/sqltoolchain?branch=master)
-
-
-* sql-preprocessor:<br/>
+sql-preprocessor:
     supports:
-    * macro-variables<br/>
-        ```
-          #define table_name "mytable"
-          select * from $table_name;`
-        ```
-    *  macro-functions<br/>
-        ```
+    macro-variables<br/>
+
+        #define table_name "mytable"
+        select * from $table_name;`
+
+    macro-functions<br/>
+
         #define quote(a) "a"
         select upper(quote(a));
-        ```
+
   
-    *  conditions<br/>
-        ```
+    conditions<br/>
+
         #define a 1
         #if a == 1
         select * from t1;
         #else
         select * from t2;
         #endif
-        ```  
-    *  includes<br/>
-        ```
-        #include "common.sql"
-        ```
-  
-* sql-pygen<br/>
-    (generate python code around SQL procedures)
-    *  asynchronous and synchronous syntax supported.
-    *  can extend to support other languages, in plans to support C++
-    *  auto-detect r/o r/w procedures, raised errors etc.
 
-    ```
+    includes<br/>
+
+        #include "common.sql"
+
+sql-pygen<br/>
+    (generate python code around SQL procedures)
+    asynchronous and synchronous syntax supported.
+    can extend to support other languages, in plans to support C++
+    auto-detect r/o r/w procedures, raised errors etc.
+
+
     CREATE PROCEDURE table1.insert (value VARCHAR(10)) COMMENT "returns object"
     BEGIN
         INSERT INTO table1 (value) VALUES(value);
         SELECT LAST_INSERT_ID() AS id;
     END$$
-    ```
 
     -->
     table1.py<br/>
-    ...<br/>
-        ```
+    ...
+
         @coroutine
         def insert(connection, value=None):
             """
@@ -70,4 +63,4 @@ The chain of tools to make work with SQL easier
                 return (yield from connection.execute(query))
             except Error as e:
                 raise handle_error(exceptions, e)
-        ```
+

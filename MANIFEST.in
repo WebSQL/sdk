@@ -1,0 +1,4 @@
+recursive-include doc *
+include MANIFEST.in
+include MANIFEST
+
