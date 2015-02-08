@@ -11,21 +11,21 @@ The chain of tools to make work with SQL easier
     * macro-variables<br/>
         ```
           #define table_name "mytable"
-          select * from $table_name;`
+          SELECT * from $table_name;`
         ```
     *  macro-functions<br/>
         ```
         #define quote(a) "a"
-        select upper(quote(a));
+        SELECT UPPER(quote(a));
         ```
   
     *  conditions<br/>
         ```
         #define a 1
         #if a == 1
-        select * from t1;
+        SELECT * from t1;
         #else
-        select * from t2;
+        SELECT * from t2;
         #endif
         ```  
     *  includes<br/>
@@ -39,7 +39,7 @@ The chain of tools to make work with SQL easier
     *  can extend to support other languages, in plans to support C++
     *  auto-detect r/o r/w procedures, raised errors etc.
 
-    ```
+    ```SQL
     CREATE PROCEDURE table1.insert (value VARCHAR(10)) COMMENT "returns object"
     BEGIN
         INSERT INTO table1 (value) VALUES(value);
@@ -50,24 +50,24 @@ The chain of tools to make work with SQL easier
     -->
     table1.py<br/>
     ...<br/>
-        ```
+    ```python
+    @coroutine
+    def insert(connection, value=None):
+        """
+        insert, table1
+        :param value: the value(VARCHAR(10), IN))
+        :return (id,)
+        """
         @coroutine
-        def insert(connection, value=None):
-            """
-            insert, table1
-            :param value: the value(VARCHAR(10), IN))
-            :return (id,)
-            """
-            @coroutine
-            def query(connection_):
-                cursor = connection_.cursor()`
-                try:
-                    yield from cursor.callproc(b"procedure4", (value,))
-                    return (yield from cursor.fetchall())[0]
-                finally:
-                    yield from cursor.close()
+        def query(connection_):
+            cursor = connection_.cursor()`
             try:
-                return (yield from connection.execute(query))
-            except Error as e:
-                raise handle_error(exceptions, e)
-        ```
+                yield from cursor.callproc(b"procedure4", (value,))
+                return (yield from cursor.fetchall())[0]
+            finally:
+                yield from cursor.close()
+        try:
+            return (yield from connection.execute(query))
+        except Error as e:
+            raise handle_error(exceptions, e)
+    ```
