@@ -181,20 +181,21 @@ def procedure3(connection):
     },
     {
         "sql": b"""
-CREATE PROCEDURE `procedure4` (i BIGINT) COMMENT "returns object, array"
+CREATE PROCEDURE `table1.update` (i BIGINT) COMMENT "returns object, array"
 BEGIN
     SELECT 1 AS `a`;
     SELECT b, c FROM t;
 END$$
 """,
+        "filename": "table1.py",
         "exceptions": """
 from websql.fabric import UserError
 """,
         "aio": '''
 @coroutine
-def procedure4(connection, i=None):
+def update(connection, i=None):
     """
-    procedure4
+    update the table1
     :param i: the i(BIGINT, IN))
     :return ((\'a\',), ([\'b\', \'c\'],))
     """
@@ -203,7 +204,7 @@ def procedure4(connection, i=None):
     def query(connection_):
         cursor = connection_.cursor()
         try:
-            yield from cursor.callproc(b"procedure4", (i,))
+            yield from cursor.callproc(b"table1.update", (i,))
             return [
                 (yield from cursor.fetchall())[0],
                 (yield from cursor.fetchall()),
@@ -213,16 +214,16 @@ def procedure4(connection, i=None):
 ''',
 
         "pure": '''
-def procedure4(connection, i=None):
+def update(connection, i=None):
     """
-    procedure4
+    update the table1
     :param i: the i(BIGINT, IN))
     :return ((\'a\',), ([\'b\', \'c\'],))
     """
 
     def query(connection_):
         with connection_.cursor() as cursor:
-            cursor.callproc(b"procedure4", (i,))
+            cursor.callproc(b"table1.update", (i,))
             return [
                 cursor.fetchall()[0],
                 cursor.fetchall(),

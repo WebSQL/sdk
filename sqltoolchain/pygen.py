@@ -71,6 +71,10 @@ class Procedure:
         else:
             self.result_columns = None
 
+    @property
+    def fullname(self):
+        return self.__proc.name
+
     def __getattr__(self, item):
         return getattr(self.__proc, item)
 
@@ -180,7 +184,7 @@ class Builder:
         if procedure.temptable:
             self.write(self.syntax.temporary_table(procedure.temptable.name, procedure.temptable.columns))
 
-        self.write(self.syntax.procedure_call(procedure.name, procedure.arguments))
+        self.write(self.syntax.procedure_call(procedure.fullname, procedure.arguments))
         self.write_returns(procedure.returns)
 
         self.write(self.syntax.cursor_close())

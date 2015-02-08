@@ -66,9 +66,11 @@ class TestGenerator(TestCase):
                 with mock.patch('builtins.open', lambda f, *a, **kw: _open_mock(f)):
                     pygen.process(args)
 
-                self.assertEqual({"__init__.py", "exceptions.py"}, set(opened_files.keys()))
+                filename = data.get("filename", "__init__.py")
 
-                code = opened_files["__init__.py"]
+                self.assertEqual({filename, "exceptions.py"}, set(opened_files.keys()))
+
+                code = opened_files[filename]
                 code.seek(0)
                 self.assertIn(data[syntax], code.read())
                 exceptions = opened_files["exceptions.py"]
