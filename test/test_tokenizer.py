@@ -5,7 +5,7 @@ Test the SQL tokenizer test
 __author__ = "@bg"
 
 from unittest import TestCase
-from sqltoolchain import interpreter
+from sqltoolchain import _interpreter
 
 
 _TEST_PROCEDURE1 = """
@@ -107,7 +107,7 @@ class TestTokenizer(TestCase):
     Test the procedure analyzer of interpreter
     """
     def setUp(self):
-        self.tokenizer = interpreter.SQLTokenizer()
+        self.tokenizer = _interpreter.SQLTokenizer()
 
     def test_scan_select(self):
         """ test scan select statement in procedures """

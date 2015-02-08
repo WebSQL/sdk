@@ -9,7 +9,7 @@ from datetime import datetime
 from functools import reduce
 from importlib import machinery
 from textwrap import TextWrapper
-from .interpreter import SQLTokenizer
+from ._interpreter import SQLTokenizer
 
 _THIS_DIR = os.path.dirname(__file__)
 

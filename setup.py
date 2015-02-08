@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+#from setuptools import setup
+from setuptools.command.bdist_rpm import bdist_rpm
+from distutils.core import setup
 import os
 
 try:

@@ -5,7 +5,7 @@ __author__ = "@bg"
 import fnmatch
 import os
 import warnings
-from .interpreter import MacrosTokenizer
+from ._interpreter import MacrosTokenizer
 
 
 class Preprocessor(MacrosTokenizer):
