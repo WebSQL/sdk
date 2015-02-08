@@ -62,7 +62,7 @@ The chain of tools to make work with SQL easier
         def query(connection_):
             cursor = connection_.cursor()`
             try:
-                yield from cursor.callproc(b"procedure4", (value,))
+                yield from cursor.callproc(b"table1.insert", (value,))
                 return (yield from cursor.fetchall())[0]
             finally:
                 yield from cursor.close()
