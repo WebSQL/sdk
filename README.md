@@ -5,8 +5,9 @@ The chain of tools to make work with SQL easier
 [![Build Status](https://travis-ci.org/WebSQL/sqltoolchain.svg?branch=master)](https://travis-ci.org/WebSQL/sqltoolchain)
 [![Coverage Status](https://coveralls.io/repos/WebSQL/sqltoolchain/badge.svg?branch=master)](https://coveralls.io/r/WebSQL/sqltoolchain?branch=master)
 
+##The includes tools:<br/>
 
-* sql-preprocessor:<br/>
+### sql-preprocessor:<br/>
     supports:
     * macro-variables<br/>
         ```
@@ -33,7 +34,7 @@ The chain of tools to make work with SQL easier
         #include "common.sql"
         ```
   
-* sql-pygen<br/>
+### sql-pygen<br/>
     (generate python code around SQL procedures)
     *  asynchronous and synchronous syntax supported.
     *  can extend to support other languages, in plans to support C++
