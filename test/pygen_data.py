@@ -16,7 +16,7 @@ BEGIN
 END$$
 """,
         "exceptions": """
-from websql.fabric import UserError
+from websql import UserError
 
 
 class TestErrorError(UserError):
@@ -24,9 +24,8 @@ class TestErrorError(UserError):
 """,
         "aio": '''
 from asyncio import coroutine
-from websql import Error
-from websql.fabric import transaction
-from websql.fabric import handle_error
+from websql import Error, handle_error
+from websql.cluster import transaction
 from . import exceptions
 
 
@@ -62,9 +61,8 @@ def test_procedure1(connection, args=None):
 ''',
 
         "pure": '''
-from websql import Error
-from websql.fabric import transaction
-from websql.fabric import handle_error
+from websql import Error, handle_error
+from websql.cluster import transaction
 from . import exceptions
 
 
@@ -103,7 +101,7 @@ BEGIN
 END$$
 """,
         "exceptions": """
-from websql.fabric import UserError
+from websql import UserError
 """,
         "aio": '''
 @coroutine
@@ -148,7 +146,7 @@ BEGIN
 END$$
 """,
         "exceptions": """
-from websql.fabric import UserError
+from websql import UserError
 """,
         "aio": '''
 @coroutine
@@ -189,7 +187,7 @@ END$$
 """,
         "filename": "table1.py",
         "exceptions": """
-from websql.fabric import UserError
+from websql import UserError
 """,
         "aio": '''
 @coroutine
