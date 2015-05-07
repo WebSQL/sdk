@@ -227,7 +227,10 @@ def load_input(source):
         with open(source, 'r', encoding='utf8') as stream:
             return stream.read()
     else:
-        return source.read().decode('utf8')
+        data = source.read()
+        if isinstance(data, bytes):
+            return data.decode("utf8")
+        return data
 
 
 def parse_arguments(argv=None):

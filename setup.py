@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup
 import os
 
 try:
@@ -25,7 +25,7 @@ def readme():
 
 setup(
     name="sqltoolchain",
-    version="0.0.2",
+    version="0.0.3",
     description='The toolchain to make work with SQL easier',
     packages=["sqltoolchain", "sqltoolchain.syntax"],
     requires=["pyparsing"],
