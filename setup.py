@@ -28,14 +28,14 @@ def readme():
 setup(
     name="sqltoolchain",
     version="0.0.1",
-    description='The toolkit to make work with SQL easier',
+    description='The toolchain to make work with SQL easier',
     packages=["sqltoolchain", "sqltoolchain.syntax"],
     requires=["pyparsing"],
     author="@bg",
     author_email='gaifullinbf@gmail.com',
     maintainer='@bg',
     maintainer_email='gaifullinbf@gmail.com',
-    url='https://github.com/WebSQL/toolkit',
+    url='https://github.com/WebSQL/sqltoolchain',
     license='MIT',
     long_description=readme(),
     classifiers=[
