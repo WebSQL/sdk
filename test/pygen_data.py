@@ -51,23 +51,23 @@ def test_procedure1(connection, args=None):
     """
 
     @coroutine
-    def query(connection_):
-        cursor = connection_.cursor()
+    def __query(__connection):
+        __cursor = __connection.cursor()
         try:
             if args is None:
                 return
             __args = ((x.get(y, None) for y in ("c1", "c2")) for x in args)
-            yield from cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `args`; CREATE TEMPORARY TABLE `args`(`c1` INT, `c2` BINARY(255)) ENGINE=MEMORY;")
-            yield from cursor.execute_many(b"INSERT INTO `args` (`c1`, `c2`) VALUES (%s, %s);", __args)
-            yield from cursor.callproc(b"test_procedure1", ())
-            __result = (yield from cursor.fetchall())[0]
-            __result.update((yield from cursor.fetchall())[0])
+            yield from __cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `args`; CREATE TEMPORARY TABLE `args`(`c1` INT, `c2` BINARY(255)) ENGINE=MEMORY;")
+            yield from __cursor.execute_many(b"INSERT INTO `args` (`c1`, `c2`) VALUES (%s, %s);", __args)
+            yield from __cursor.callproc(b"test_procedure1", ())
+            __result = (yield from __cursor.fetchall())[0]
+            __result.update((yield from __cursor.fetchall())[0])
             return __result
         finally:
-            yield from cursor.close()
+            yield from __cursor.close()
 
     try:
-        return (yield from connection.execute(query))
+        return (yield from connection.execute(__query))
     except Error as e:
         raise handle_error(exceptions, e)
 ''',
@@ -86,20 +86,20 @@ def test_procedure1(connection, args=None):
     :raises: TestError
     """
 
-    def query(connection_):
-        with connection_.cursor() as cursor:
+    def __query(__connection):
+        with __connection.cursor() as __cursor:
             if args is None:
                 return
             __args = ((x.get(y, None) for y in ("c1", "c2")) for x in args)
-            cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `args`; CREATE TEMPORARY TABLE `args`(`c1` INT, `c2` BINARY(255)) ENGINE=MEMORY;")
-            cursor.execute_many(b"INSERT INTO `args` (`c1`, `c2`) VALUES (%s, %s);", __args)
-            cursor.callproc(b"test_procedure1", ())
-            __result = cursor.fetchall()[0]
-            __result.update(cursor.fetchall()[0])
+            __cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `args`; CREATE TEMPORARY TABLE `args`(`c1` INT, `c2` BINARY(255)) ENGINE=MEMORY;")
+            __cursor.execute_many(b"INSERT INTO `args` (`c1`, `c2`) VALUES (%s, %s);", __args)
+            __cursor.callproc(b"test_procedure1", ())
+            __result = __cursor.fetchall()[0]
+            __result.update(__cursor.fetchall()[0])
             return __result
 
     try:
-        return connection.execute(query)
+        return connection.execute(__query)
     except Error as e:
         raise handle_error(exceptions, e)
 ''',
@@ -126,13 +126,13 @@ def test_procedure2(connection, c1=None, c2=None):
     """
 
     @coroutine
-    def query(connection_):
-        cursor = connection_.cursor()
+    def __query(__connection):
+        __cursor = __connection.cursor()
         try:
-            yield from cursor.callproc(b"test_procedure2", (c1, c2))
-            return (yield from cursor.fetchall())
+            yield from __cursor.callproc(b"test_procedure2", (c1, c2))
+            return (yield from __cursor.fetchall())
         finally:
-            yield from cursor.close()
+            yield from __cursor.close()
 ''',
 
         "pure": '''
@@ -144,10 +144,10 @@ def test_procedure2(connection, c1=None, c2=None):
     :return ((\'a\',),)
     """
 
-    def query(connection_):
-        with connection_.cursor() as cursor:
-            cursor.callproc(b"test_procedure2", (c1, c2))
-            return cursor.fetchall()
+    def __query(__connection):
+        with __connection.cursor() as __cursor:
+            __cursor.callproc(b"test_procedure2", (c1, c2))
+            return __cursor.fetchall()
 '''
     },
     {
@@ -169,12 +169,12 @@ def procedure3(connection):
 
     @transaction
     @coroutine
-    def query(connection_):
-        cursor = connection_.cursor()
+    def __query(__connection):
+        __cursor = __connection.cursor()
         try:
-            yield from cursor.callproc(b"procedure3", ())
+            yield from __cursor.callproc(b"procedure3", ())
         finally:
-            yield from cursor.close()
+            yield from __cursor.close()
 ''',
 
         "pure": '''
@@ -184,9 +184,9 @@ def procedure3(connection):
     """
 
     @transaction
-    def query(connection_):
-        with connection_.cursor() as cursor:
-            cursor.callproc(b"procedure3", ())
+    def __query(__connection):
+        with __connection.cursor() as __cursor:
+            __cursor.callproc(b"procedure3", ())
 '''
     },
     {
@@ -211,16 +211,16 @@ def update(connection, i=None):
     """
 
     @coroutine
-    def query(connection_):
-        cursor = connection_.cursor()
+    def __query(__connection):
+        __cursor = __connection.cursor()
         try:
-            yield from cursor.callproc(b"table1.update", (i,))
+            yield from __cursor.callproc(b"table1.update", (i,))
             return [
-                (yield from cursor.fetchall())[0],
-                (yield from cursor.fetchall()),
+                (yield from __cursor.fetchall())[0],
+                (yield from __cursor.fetchall()),
             ]
         finally:
-            yield from cursor.close()
+            yield from __cursor.close()
 ''',
 
         "pure": '''
@@ -231,12 +231,12 @@ def update(connection, i=None):
     :return ((\'a\',), ([\'b\', \'c\'],))
     """
 
-    def query(connection_):
-        with connection_.cursor() as cursor:
-            cursor.callproc(b"table1.update", (i,))
+    def __query(__connection):
+        with __connection.cursor() as __cursor:
+            __cursor.callproc(b"table1.update", (i,))
             return [
-                cursor.fetchall()[0],
-                cursor.fetchall(),
+                __cursor.fetchall()[0],
+                __cursor.fetchall(),
             ]
 '''
     }

@@ -37,7 +37,7 @@ doc_indent = indent
 break_lines = 2
 
 
-return_array = """(yield from cursor.fetchall())"""
+return_array = """(yield from __cursor.fetchall())"""
 return_object = return_array + "[0]"
 
 
@@ -122,8 +122,8 @@ def temporary_table(name, columns):
             if {0} is None:
                 return
             __args = ((x.get(y, None) for y in ({1})) for x in {0})
-            yield from cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `{0}`; CREATE TEMPORARY TABLE `{0}`({2}) ENGINE=MEMORY;")
-            yield from cursor.execute_many(b"INSERT INTO `{0}` ({3}) VALUES ({4});", __args)"""\
+            yield from __cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `{0}`; CREATE TEMPORARY TABLE `{0}`({2}) ENGINE=MEMORY;")
+            yield from __cursor.execute_many(b"INSERT INTO `{0}` ({3}) VALUES ({4});", __args)"""\
         .format(name, column_names, columns_def, column_names_sql, place_holders)
 
 
@@ -152,14 +152,14 @@ def procedure_close():
 
     return """
     try:
-        return (yield from connection.execute(query))
+        return (yield from connection.execute(__query))
     except Error as e:
         raise handle_error(exceptions, e)"""
 
 
 def body_open():
     """open the main logic"""
-    return "    @coroutine\n    def query(connection_):"
+    return "    @coroutine\n    def __query(__connection):"
 
 
 def body_close():
@@ -169,12 +169,12 @@ def body_close():
 
 def cursor_open():
     """open cursor"""
-    return "        cursor = connection_.cursor()\n        try:"
+    return "        __cursor = __connection.cursor()\n        try:"
 
 
 def cursor_close():
     """close cursor"""
-    return "        finally:\n            yield from cursor.close()"
+    return "        finally:\n            yield from __cursor.close()"
 
 
 def procedure_call(name, args):
@@ -184,7 +184,7 @@ def procedure_call(name, args):
     if len(args) == 1:
         args_str += ","
 
-    return '            yield from cursor.callproc(b"{0}", ({1}))'.format(name, args_str)
+    return '            yield from __cursor.callproc(b"{0}", ({1}))'.format(name, args_str)
 
 
 def exception_class(name):

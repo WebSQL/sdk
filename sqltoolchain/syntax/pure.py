@@ -37,7 +37,7 @@ doc_indent = indent
 break_lines = 2
 
 
-return_array = """cursor.fetchall()"""
+return_array = """__cursor.fetchall()"""
 return_object = return_array + "[0]"
 
 
@@ -122,8 +122,8 @@ def temporary_table(name, columns):
             if {0} is None:
                 return
             __args = ((x.get(y, None) for y in ({1})) for x in {0})
-            cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `{0}`; CREATE TEMPORARY TABLE `{0}`({2}) ENGINE=MEMORY;")
-            cursor.execute_many(b"INSERT INTO `{0}` ({3}) VALUES ({4});", __args)"""\
+            __cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `{0}`; CREATE TEMPORARY TABLE `{0}`({2}) ENGINE=MEMORY;")
+            __cursor.execute_many(b"INSERT INTO `{0}` ({3}) VALUES ({4});", __args)"""\
         .format(name, column_names, columns_def, column_names_sql, place_holders)
 
 
@@ -150,14 +150,14 @@ def procedure_close():
     """close procedure body"""
     return """
     try:
-        return connection.execute(query)
+        return connection.execute(__query)
     except Error as e:
         raise handle_error(exceptions, e)"""
 
 
 def body_open():
     """open the main logic"""
-    return "    def query(connection_):"
+    return "    def __query(__connection):"
 
 
 def body_close():
@@ -167,7 +167,7 @@ def body_close():
 
 def cursor_open():
     """open cursor"""
-    return "        with connection_.cursor() as cursor:"
+    return "        with __connection.cursor() as __cursor:"
 
 
 def cursor_close():
@@ -181,7 +181,7 @@ def procedure_call(name, args):
     if len(args) == 1:
         args_str += ","
 
-    return '            cursor.callproc(b"{0}", ({1}))'.format(name, args_str)
+    return '            __cursor.callproc(b"{0}", ({1}))'.format(name, args_str)
 
 
 def exception_class(name):
