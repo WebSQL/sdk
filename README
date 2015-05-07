@@ -1,66 +1,83 @@
 SQL-toolchain
+=============
 The chain of tools to make work with SQL easier
 
 sql-preprocessor:
-    supports:
-    macro-variables<br/>
+--------------------
+supports:
+*************
+* macros
 
-        #define table_name "mytable"
-        select * from $table_name;`
+.. code-block::
+ 
+    #define table_name "mytable"
+    select * from $table_name;
 
-    macro-functions<br/>
 
-        #define quote(a) "a"
-        select upper(quote(a));
+* macro-functions
+
+.. code-block:: sql
+
+    #define quote(a) "a"
+    select upper(quote(a));
 
   
-    conditions<br/>
+* conditions
 
-        #define a 1
-        #if a == 1
-        select * from t1;
-        #else
-        select * from t2;
-        #endif
+.. code-block:: sql
 
-    includes<br/>
+    #define a 1
+    #if a == 1
+    select * from t1;
+    #else
+    select * from t2;
+    #endif
 
-        #include "common.sql"
+* includes
 
-sql-pygen<br/>
-    (generate python code around SQL procedures)
-    asynchronous and synchronous syntax supported.
-    can extend to support other languages, in plans to support C++
-    auto-detect r/o r/w procedures, raised errors etc.
+.. code-block:: sql
 
+    #include "common.sql"
+
+sql-pygen:
+-----------
+(generate python code around SQL procedures)
+asynchronous and synchronous syntax supported.
+can extend to support other languages, in plans to support C++
+auto-detect r/o r/w procedures, raised errors etc.
+
+SQL
+*******
+.. code-block:: sql
 
     CREATE PROCEDURE table1.insert (value VARCHAR(10)) COMMENT "returns object"
     BEGIN
         INSERT INTO table1 (value) VALUES(value);
         SELECT LAST_INSERT_ID() AS id;
-    END$$
+    END
 
-    -->
-    table1.py<br/>
-    ...
 
+Python
+*********
+
+.. code-block:: python
+
+    @coroutine
+    def insert(connection, value=None):
+        """
+        insert, table1
+        :param value: the value(VARCHAR(10), IN))
+        :return (id,)
+        """
         @coroutine
-        def insert(connection, value=None):
-            """
-            insert, table1
-            :param value: the value(VARCHAR(10), IN))
-            :return (id,)
-            """
-            @coroutine
-            def query(connection_):
-                cursor = connection_.cursor()`
-                try:
-                    yield from cursor.callproc(b"procedure4", (value,))
-                    return (yield from cursor.fetchall())[0]
-                finally:
-                    yield from cursor.close()
+        def query(connection_):
+            cursor = connection_.cursor()
             try:
-                return (yield from connection.execute(query))
-            except Error as e:
-                raise handle_error(exceptions, e)
-
+                yield from cursor.callproc(b"procedure4", (value,))
+                return (yield from cursor.fetchall())[0]
+            finally:
+                yield from cursor.close()
+        try:
+            return (yield from connection.execute(query))
+        except Error as e:
+            raise handle_error(exceptions, e)
