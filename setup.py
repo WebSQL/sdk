@@ -55,7 +55,7 @@ setup(
     entry_points={
         'console_scripts': [
             'sql-pygen=sqltoolchain.pygen:main',
-            'sql-preprocessor=sqlpreprocessor:main',
+            'sql-preprocessor=sqltoolchain.preprocessor:main',
         ],
     }
 )
