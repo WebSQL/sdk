@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-#from setuptools import setup
-from setuptools.command.bdist_rpm import bdist_rpm
 from distutils.core import setup
 import os
 
@@ -27,7 +25,7 @@ def readme():
 
 setup(
     name="sqltoolchain",
-    version="0.0.1",
+    version="0.0.2",
     description='The toolchain to make work with SQL easier',
     packages=["sqltoolchain", "sqltoolchain.syntax"],
     requires=["pyparsing"],
