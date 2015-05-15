@@ -122,7 +122,8 @@ def temporary_table(name, columns):
             if {0} is None:
                 return
             __args = ((x.get(y, None) for y in ({1})) for x in {0})
-            yield from __cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `{0}`; CREATE TEMPORARY TABLE `{0}`({2}) ENGINE=MEMORY;")
+            yield from __cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `{0}`;")
+            yield from __cursor.execute(b"CREATE TEMPORARY TABLE `{0}`({2}) ENGINE=MEMORY;")
             yield from __cursor.execute_many(b"INSERT INTO `{0}` ({3}) VALUES ({4});", __args)"""\
         .format(name, column_names, columns_def, column_names_sql, place_holders)
 
@@ -184,7 +185,7 @@ def procedure_call(name, args):
     if len(args) == 1:
         args_str += ","
 
-    return '            yield from __cursor.callproc(b"{0}", ({1}))'.format(name, args_str)
+    return '            yield from __cursor.callproc(b"`{0}`", ({1}))'.format(name, args_str)
 
 
 def exception_class(name):
