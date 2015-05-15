@@ -35,33 +35,29 @@ class TestGenerator(TestCase):
         """ test validate the procedures """
         proc = Dummy()
         proc.name = "test"
-        proc.returns = Dummy()
-        proc.returns.types = ("array", "object")
-        proc.returns.merge = True
+        r1 = Dummy()
+        r1.name = ""
+        r1.type = "array"
+        r2 = Dummy()
+        r2.name = ""
+        r2.type = "object"
+        proc.returns = (r1, r2)
+        proc.return_mod = "union"
         proc.queries = []
 
-        with catch_warnings(record=True) as log:
-            self.assertRaisesRegex(ValueError, "cannot merge of returns with different types", pygen.Builder.validate, proc)
-            self.assertEqual(1, len(log))
-            self.assertIn("returns does not match queries", str(log[0]))
-
-        with catch_warnings(record=True) as log:
-            proc.returns = []
-            proc.queries = ["SELECT"]
-            pygen.Builder.validate(proc)
-            self.assertIn("returns does not match queries", str(log[0]))
+        self.assertRaisesRegex(ValueError, "cannot union of returns with different types", pygen.Builder.validate, proc)
 
     def test_parse_cmdline(self):
         """ test parse commandline arguments """
-        args = pygen.parse_arguments(["-i", "test.sql", "-o", "build", "-s", "aio"])
+        args = pygen.parse_arguments(["-i", "test.sql", "-o", "build", "-s", "pyaio"])
         self.assertEqual("test.sql", args.input)
         self.assertEqual("build", args.outdir)
-        self.assertEqual("aio", args.syntax)
+        self.assertEqual("pyaio", args.syntax)
 
     def test_syntax(self):
         """ test generate result with different templates """
         for data in TEST_DATA:
-            for syntax in ("aio", "pure"):
+            for syntax in ("pyaio", "pynative"):
                 args = Dummy()
                 args.input = BytesIO(data["sql"])
                 args.syntax = syntax
@@ -87,3 +83,23 @@ class TestGenerator(TestCase):
                 exceptions = opened_files["exceptions.py"]
                 exceptions.seek(0)
                 self.assertIn(data["exceptions"], exceptions.read())
+
+    def test_duplicate_fields(self):
+        r1 = Dummy()
+        r1.name = ""
+        r1.type = "object"
+        r1.fields = ("a", "b", "c")
+        r2 = Dummy()
+        r2.name = ""
+        r2.type = "object"
+        r2.fields = ("a", "c")
+        proc = Dummy()
+        proc.name = "test"
+        proc.arguments = []
+        proc.temptable = None
+        proc.return_mod = "union"
+        proc.returns = (r1, r2)
+
+        with catch_warnings(record=True) as log:
+            pygen.Procedure(proc, True, [])
+            self.assertIn("test has duplicated fields: a, c", str(log[0]))

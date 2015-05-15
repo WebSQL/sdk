@@ -42,7 +42,7 @@ _ELSE = _BEGIN_MACROS + Suppress(CaselessKeyword('ELSE')) + lineEnd
 _ENDIF = _BEGIN_MACROS + Suppress(CaselessKeyword("ENDIF")) + lineEnd
 
 # ANALYSER
-_SKIP_TO_END = Suppress(SkipTo(Literal(";")))
+_SKIP_TO_END = Suppress(SkipTo(Literal(";"), include=True))
 _SQL_IDENTIFIER = Suppress(Optional(Literal('`'))) + Word(alphanums + '_.') + Suppress(Optional(Literal('`')))
 _SQL_IDENTIFIERS = Group(delimitedList(_SQL_IDENTIFIER))
 _COLUMN = Group(_SQL_IDENTIFIER + Optional(CaselessKeyword('AS') + _SQL_IDENTIFIER))
@@ -52,10 +52,11 @@ _DIRECTION = oneOf('INOUT IN OUT', caseless=True)
 _TYPE = Combine(Word(alphanums + '_') + Optional('(' + Word(nums) + ')'))
 _ARGUMENT = Group(Optional(_DIRECTION, default='IN') + _SQL_IDENTIFIER + _TYPE)
 _ARGUMENTS = delimitedList(_ARGUMENT)
+_RETURN_MODIFIER = CaselessKeyword("union")
 _RETURN_TYPE = CaselessKeyword("object") | CaselessKeyword("array")
-_RETURN_TYPES = Group(delimitedList(_RETURN_TYPE))
+_RETURN_HINT = Suppress(Literal("-->")) + Optional(_SQL_IDENTIFIER.setResultsName("return_name") + Suppress(Literal(":"))) + _RETURN_TYPE.setResultsName("return_type")
 _META_FORMAT = Optional(_SQL_IDENTIFIER.setResultsName('table') + nestedExpr(content=delimitedList(Group(_SQL_IDENTIFIER + _TYPE)), ignoreExpr=None).setResultsName('columns') + Suppress(Literal(';'))) + \
-    Suppress(CaselessKeyword("returns")) + Optional(CaselessKeyword("merge").setResultsName('mode') + Suppress(Literal(":"))) + _RETURN_TYPES.setResultsName('returns') + lineEnd
+    Optional(Suppress(CaselessKeyword("returns")) + _RETURN_MODIFIER.setResultsName("return_mod")) + lineEnd
 
 _COMMENT = Optional(Suppress(CaselessKeyword("COMMENT")) + quotedString.setResultsName('meta'))
 
@@ -67,8 +68,9 @@ _PROCEDURE_END_TOKEN = Suppress(Regex('END\s*\$\$'))
 
 _SELECT_TOKEN = CaselessKeyword("SELECT").setResultsName('op') + \
     (_COLUMNS | _EXPRESSION).setResultsName('columns') + \
-    Optional(CaselessKeyword("INTO") + _SQL_IDENTIFIERS.setResultsName('into')) + \
-    Optional(CaselessKeyword("FROM") + _SQL_IDENTIFIER.setResultsName('table')) + _SKIP_TO_END
+    Optional(Group(CaselessKeyword("INTO") + _SQL_IDENTIFIERS).setResultsName('into')) + \
+    Optional(Suppress(CaselessKeyword("FROM")) + _SQL_IDENTIFIER.setResultsName('table')) + _SKIP_TO_END + \
+    Optional(_RETURN_HINT)
 
 _INSERT_TOKEN = CaselessKeyword("INSERT").setResultsName('op') + CaselessKeyword("INTO") + \
     _SQL_IDENTIFIER.setResultsName('table') + _SKIP_TO_END
@@ -82,6 +84,8 @@ _THROW_TOKEN = Suppress(CaselessKeyword("CALL")) + CaselessKeyword("__throw") + 
     nestedExpr(content=quotedString.setResultsName('error_class') + Suppress(',') + quotedString, ignoreExpr=None)
 
 _CALL_TOKEN = CaselessKeyword("CALL") + _SQL_IDENTIFIER.setResultsName('procedure') + _SKIP_TO_END
+
+_DEFAULT_RETURN_TYPE = "object"
 
 
 class MacrosTokenizer:
@@ -216,7 +220,7 @@ class _Procedure:
     command_class = namedtuple('Command', ('op', 'table', 'columns'))
     temptable_class = namedtuple('TempTable', ('name', 'columns'))
     column_class = namedtuple('Column', ('name', 'type'))
-    returns_class = namedtuple('Returns', ('merge', 'types'))
+    returns_class = namedtuple('Return', ('name', 'type', 'fields'))
 
     def __init__(self, name, arguments, meta):
         self.name = name
@@ -227,12 +231,13 @@ class _Procedure:
         self.read_only = None
         self.errors = set()
         self.temptable = None
-        self.returns = None
+        self.returns = list()
+        self.return_mod = None
 
         if meta:
             try:
                 meta = _META_FORMAT.parseString(meta.strip("'\""))
-                self.returns = self.returns_class(meta.mode == 'merge', tuple(meta.returns))
+                self.return_mod = meta.return_mod
                 if meta.table:
                     self.temptable = self.temptable_class(meta.table[0], tuple(self.column_class(*x) for x in meta.columns[0]))
 
@@ -243,12 +248,15 @@ class _Procedure:
 
     def add_read_command(self, *args):
         """handle new read command"""
-        self.queries.append(self.command_class(args[0], args[1], tuple(x[-1] for x in args[2])))
+        self.queries.append(self.command_class(*args))
 
     def add_write_command(self, *args):
         """handle new write command"""
         self.modifiers.append(self.command_class(*args))
         self.read_only = False
+
+    def add_return(self, name, return_type, fields):
+        self.returns.append(self.returns_class(name and name[0], return_type or _DEFAULT_RETURN_TYPE, fields))
 
     def __repr__(self):
         return self.name
@@ -290,7 +298,9 @@ class SQLTokenizer:
     def on_select(self, tokens):
         """select statement handler"""
         if self._current and not tokens.into:
-            self._current.add_read_command(tokens.op, tokens.table and tokens.table[0], tokens.columns)
+            fields = tuple(x[-1] for x in tokens.columns)
+            self._current.add_read_command(tokens.op, tokens.table and tokens.table[0], fields)
+            self._current.add_return(tokens.return_name, tokens.return_type, fields)
 
     def on_insert(self, tokens):
         """insert statement handler"""

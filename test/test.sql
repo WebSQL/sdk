@@ -15,7 +15,7 @@
 DELIMITER $$
 
 DROP PROCEDURE IF EXISTS `accounts.get_by_login`$$
-CREATE PROCEDURE `accounts.get_by_login` (`login` VARCHAR(255)) COMMENT 'returns object'
+CREATE PROCEDURE `accounts.get_by_login` (`login` VARCHAR(255))
 BEGIN
   SELECT
       accounts.login,
@@ -30,7 +30,7 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS `accounts.get_desc`$$
-CREATE PROCEDURE `accounts.get_desc` (`login` VARCHAR(255)) COMMENT 'returns merge: object, object'
+CREATE PROCEDURE `accounts.get_desc` (`login` VARCHAR(255)) COMMENT 'returns union'
 BEGIN
   SELECT 2 INTO a2 FROM t2 WHERE k=1;
   SELECT 1 AS version;
@@ -83,11 +83,10 @@ END$$
 
 
 DROP PROCEDURE IF EXISTS `accounts.update`$$
-CREATE PROCEDURE `accounts.update` () COMMENT "args (`name` VARCHAR(10), `t` BOOLEAN); returns object"
+CREATE PROCEDURE `accounts.update` () COMMENT "args (`name` VARCHAR(10), `t` BOOLEAN);"
 BEGIN
   DECLARE CONTINUE HANDLER FOR 1062 CALL accounts.__try_update_existed(login, local_id, server_url);
   INSERT INTO accounts (`login`, local_id, `server_url`) VALUES (login, local_id, server_url);
 END$$
-
 
 DELIMITER ;

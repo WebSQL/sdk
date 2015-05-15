@@ -21,7 +21,6 @@ from sqltoolchain import _interpreter
 
 _TEST_PROCEDURE1 = """
 CREATE PROCEDURE `test_procedure1` (IN `varchar` VARCHAR(255), OUT b boolEAN)
- COMMENT 'returns object, object, object, object, object, object'
 BEGIN
   SELECT
    2
@@ -32,14 +31,14 @@ BEGIN
   where
    3;
 
-  SELECT 1;
-  SELECT 3 AS a;
+  SELECT 1; --> object
+  SELECT 3 AS a; --> object
 
   SELECT `a` FROM `b` WHERE t
   UNION
-    SELECT `a` FROM `c` WHERE y;
+    SELECT `a` FROM `c` WHERE y; --> object
 
-  SELECT (EXISTS(SELECT 1 FROM t WHERE y)) AS a;
+  SELECT (EXISTS(SELECT 1 FROM t WHERE y)) AS a; --> object
   SELECT a FROM b a JOIN i WHERE j IN (SELECT y FROM d);
 
   SELECT a,b,c AS d FROM y WHERE i ORDER BY u;
@@ -50,7 +49,7 @@ SELECT 2 INTO a2 FROM t2 WHERE k=1;
 
 _TEST_PROCEDURE2 = """
 CREATE PROCEDURE `test_procedure2` ()
- COMMENT "args (c1 INT, c2 BINARY(255)); returns array"
+ COMMENT "args (c1 INT, c2 BINARY(255));"
 BEGIN
     INSERT
      INTO
@@ -67,7 +66,7 @@ BEGIN
         FROM l
         WHERE
         j=1;
-    SELECT a FROM b;
+    SELECT a FROM b; --> array
 END$$
 
 UPDATE k SET l = 2 WHERE b=1;
@@ -75,7 +74,7 @@ UPDATE k SET l = 2 WHERE b=1;
 
 _TEST_PROCEDURE3 = """
 CREATE PROCEDURE `test_procedure3` ()
- COMMENT "args (c1 INT, c2 BINARY(255)); returns merge: object, object, object"
+ COMMENT "args (c1 INT, c2 BINARY(255)); returns union"
 BEGIN
     CALL __test_procedure3(1);
     CALL __test_procedure3(2);
@@ -94,20 +93,40 @@ END$$
 
 """
 
+_TEST_PROCEDURE4 = """
+CREATE PROCEDURE `test_procedure4` ()
+BEGIN
+    SELECT a FROM b; --> array
+    SELECT a FROM b; --> name:array
+    SELECT a FROM b; --> object
+    SELECT a FROM b; --> name:object
+    SELECT a FROM b;
+END$$
+"""
+
+_TEST_PROCEDURE5 = """
+CREATE PROCEDURE `test_procedure4` () COMMENT "returns union"
+BEGIN
+    SELECT a FROM b; --> object
+    SELECT a FROM b; --> name:object
+    SELECT a FROM b;
+END$$
+"""
+
 _TEST_PROCEDURE_INVALID1 = """
 CREATE PROCEDURE `test_invalid1` ()
- COMMENT "args (c1 INT, c2 BINARY(255)); returns object, object, dict"
+ COMMENT "args (c1 INT, c2 BINARY(255)); returns merge"
 BEGIN
 END$$
 """
 
 _TEST_PROCEDURE_INVALID2 = """
 CREATE PROCEDURE `test_invalid2` ()
- COMMENT "args (c1 INT, c2 BINARY(255)); returns object, object"
+ COMMENT "args (c1 INT, c2 BINARY(255));"
 BEGIN
 END$$
 CREATE PROCEDURE `test_invalid2` ()
- COMMENT "args (c1 INT, c2 BINARY(255)); returns object, object"
+ COMMENT "args (c1 INT, c2 BINARY(255));"
 BEGIN
 END$$
 """
@@ -169,9 +188,9 @@ class TestTokenizer(TestCase):
     def test_parse_meta(self):
         """ test parse meta """
         self.tokenizer.parse(_TEST_PROCEDURE1)
-        proc = self.tokenizer._procedures["test_procedure1"].returns.types
-        self.assertEqual(6, len(self.tokenizer._procedures["test_procedure1"].returns.types))
-        self.assertTrue(any(x == "object" for x in proc))
+        returns = self.tokenizer._procedures["test_procedure1"].returns
+        self.assertEqual(6, len(returns))
+        self.assertTrue(any(x.type == "object" and x.name == "" for x in returns))
 
         self.tokenizer.reset()
         self.assertRaisesRegex(ValueError, "SyntaxError: procedure test_invalid1",
@@ -181,3 +200,19 @@ class TestTokenizer(TestCase):
         """ test raise error if there is 2 procedures with same name"""
         self.assertRaisesRegex(ValueError, "The procedure test_invalid2 already defined",
                                self.tokenizer.parse, _TEST_PROCEDURE_INVALID2)
+
+    def test_parse_return_type(self):
+        """ test parse return different """
+        self.tokenizer.parse(_TEST_PROCEDURE4)
+        returns = self.tokenizer._procedures["test_procedure4"].returns
+        self.assertEqual(5, len(returns))
+        self.assertEqual(("", "array", ("a",)), returns[0])
+        self.assertEqual(("name", "array", ("a",)), returns[1])
+        self.assertEqual(("", "object", ("a",)), returns[2])
+        self.assertEqual(("name", "object", ("a",)), returns[3])
+        self.assertEqual(("", "object", ("a",)), returns[4])
+
+    def test_parse_return_mod(self):
+        """ test parse return different """
+        self.tokenizer.parse(_TEST_PROCEDURE5)
+        self.assertEqual("union", self.tokenizer._procedures["test_procedure4"].return_mod)

@@ -14,17 +14,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from sqltoolchain.syntax._python import *
+
 __author__ = "@bg"
 
 
 file_header = """
 # auto-generated file by WebSQL-Toolkit
-# It is legacy version with lower performance, to get best result please use asynchronous version
 # {timestamp}
 """
 
 
 includes_for_api = """
+from asyncio import coroutine
 from websql import Error, handle_error
 from websql.cluster import transaction
 from . import exceptions"""
@@ -37,78 +39,8 @@ doc_indent = indent
 break_lines = 2
 
 
-return_array = """__cursor.fetchall()"""
+return_array = """(yield from __cursor.fetchall())"""
 return_object = return_array + "[0]"
-
-
-def doc_open():
-    """start doc-string"""
-    return '    """'
-
-
-def doc_close():
-    """start doc-string"""
-    return '    """'
-
-
-def doc_arg(name, brief):
-    """argument of doc_string"""
-    return "    :param {0}: {1})".format(name, brief)
-
-
-def doc_brief(brief):
-    """format brief for doc-string"""
-    return "    " + brief
-
-
-def doc_errors(errors):
-    """format errors for doc-string"""
-    return "    :raises: {0}".format(', '.join(errors))
-
-
-def doc_return(returns):
-    """format return for doc-string"""
-    return "    :return {!r}".format(returns)
-
-
-def return_empty():
-    """return empty value"""
-    pass
-
-
-def return_single(r):
-    """return single statement"""
-    return "            return " + r
-
-
-def return_multi_open():
-    """combine result set(start)"""
-    return "            return ["
-
-
-def return_multi_item(item):
-    """combine result set(item)"""
-    return "                {0},".format(item)
-
-
-def return_multi_close():
-    """combine result set(end)"""
-    return "            ]"
-
-
-def return_merge_open(first):
-    """merge result set(start)"""
-    return "            __result = " + first
-
-
-def return_merge_item(item):
-    """merge result set(item)"""
-    return "            __result.update({0})".format(item)
-
-
-def return_merge_close():
-    """merge result set(end)"""
-    return "            return __result"
 
 
 def temporary_table(name, columns):
@@ -122,9 +54,9 @@ def temporary_table(name, columns):
             if {0} is None:
                 return
             __args = ((x.get(y, None) for y in ({1})) for x in {0})
-            __cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `{0}`;")
-            __cursor.execute(b"CREATE TEMPORARY TABLE `{0}`({2}) ENGINE=MEMORY;")
-            __cursor.execute_many(b"INSERT INTO `{0}` ({3}) VALUES ({4});", __args)"""\
+            yield from __cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `{0}`;")
+            yield from __cursor.execute(b"CREATE TEMPORARY TABLE `{0}`({2}) ENGINE=MEMORY;")
+            yield from __cursor.execute_many(b"INSERT INTO `{0}` ({3}) VALUES ({4});", __args)"""\
         .format(name, column_names, columns_def, column_names_sql, place_holders)
 
 
@@ -140,25 +72,27 @@ def transaction_close():
 
 def procedure_open(name, args):
     """open procedure body"""
+
     args = ', '.join('{0}=None'.format(x) for x in args)
     if args:
         args = ', ' + args
 
-    return "def {0}(connection{1}):".format(name, args)
+    return "@coroutine\ndef {0}(connection{1}):".format(name, args)
 
 
 def procedure_close():
     """close procedure body"""
+
     return """
     try:
-        return connection.execute(__query)
+        return (yield from connection.execute(__query))
     except Error as e:
         raise handle_error(exceptions, e)"""
 
 
 def body_open():
     """open the main logic"""
-    return "    def __query(__connection):"
+    return "    @coroutine\n    def __query(__connection):"
 
 
 def body_close():
@@ -168,24 +102,19 @@ def body_close():
 
 def cursor_open():
     """open cursor"""
-    return "        with __connection.cursor() as __cursor:"
+    return "        __cursor = __connection.cursor()\n        try:"
 
 
 def cursor_close():
     """close cursor"""
-    pass
+    return "        finally:\n            yield from __cursor.close()"
 
 
 def procedure_call(name, args):
     """call procedure"""
+
     args_str = ', '.join(x.name for x in args)
     if len(args) == 1:
         args_str += ","
 
-    return '            __cursor.callproc(b"`{0}`", ({1}))'.format(name, args_str)
-
-
-def exception_class(name):
-    """declare exception class"""
-
-    return "class {0}Error(UserError):\n    pass".format(name)
+    return '            yield from __cursor.callproc(b"`{0}`", ({1}))'.format(name, args_str)

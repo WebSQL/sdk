@@ -20,7 +20,7 @@ TEST_DATA = [
     {
         "sql": b"""
 CREATE PROCEDURE `test_procedure1` ()
- COMMENT "args (c1 INT, c2 BINARY(255)); returns merge: object, object"
+ COMMENT "args (c1 INT, c2 BINARY(255)); returns union"
 BEGIN
     SELECT 1 AS `a`;
     SELECT 2 AS `b`;
@@ -34,7 +34,7 @@ from websql import UserError
 class TestErrorError(UserError):
     pass
 """,
-        "aio": '''
+        "pyaio": '''
 from asyncio import coroutine
 from websql import Error, handle_error
 from websql.cluster import transaction
@@ -46,7 +46,7 @@ def test_procedure1(connection, args=None):
     """
     test the procedure1
     :param args: list of {c1(INT),c2(BINARY(255))})
-    :return ('a', 'b')
+    :return ("a", "b")
     :raises: TestError
     """
 
@@ -73,7 +73,7 @@ def test_procedure1(connection, args=None):
         raise handle_error(exceptions, e)
 ''',
 
-        "pure": '''
+        "pynative": '''
 from websql import Error, handle_error
 from websql.cluster import transaction
 from . import exceptions
@@ -83,7 +83,7 @@ def test_procedure1(connection, args=None):
     """
     test the procedure1
     :param args: list of {c1(INT),c2(BINARY(255))})
-    :return ('a', 'b')
+    :return ("a", "b")
     :raises: TestError
     """
 
@@ -109,22 +109,22 @@ def test_procedure1(connection, args=None):
     },
     {
         "sql": b"""
-CREATE PROCEDURE `test_procedure2` (c1 INT, c2 VARCHAR(255)) COMMENT "returns array"
+CREATE PROCEDURE `test_procedure2` (c1 INT, c2 VARCHAR(255))
 BEGIN
-    SELECT `a` FROM t;
+    SELECT `a` FROM t; --> array
 END$$
 """,
         "exceptions": """
 from websql import UserError
 """,
-        "aio": '''
+        "pyaio": '''
 @coroutine
 def test_procedure2(connection, c1=None, c2=None):
     """
     test the procedure2
     :param c1: the c1(INT, IN))
     :param c2: the c2(VARCHAR(255), IN))
-    :return ((\'a\',),)
+    :return [("a",)]
     """
 
     @coroutine
@@ -137,13 +137,13 @@ def test_procedure2(connection, c1=None, c2=None):
             yield from __cursor.close()
 ''',
 
-        "pure": '''
+        "pynative": '''
 def test_procedure2(connection, c1=None, c2=None):
     """
     test the procedure2
     :param c1: the c1(INT, IN))
     :param c2: the c2(VARCHAR(255), IN))
-    :return ((\'a\',),)
+    :return [("a",)]
     """
 
     def __query(__connection):
@@ -162,7 +162,7 @@ END$$
         "exceptions": """
 from websql import UserError
 """,
-        "aio": '''
+        "pyaio": '''
 @coroutine
 def procedure3(connection):
     """
@@ -179,7 +179,7 @@ def procedure3(connection):
             yield from __cursor.close()
 ''',
 
-        "pure": '''
+        "pynative": '''
 def procedure3(connection):
     """
     procedure3
@@ -193,23 +193,23 @@ def procedure3(connection):
     },
     {
         "sql": b"""
-CREATE PROCEDURE `table1.update` (i BIGINT) COMMENT "returns object, array"
+CREATE PROCEDURE `table1.update` (i BIGINT)
 BEGIN
-    SELECT 1 AS `a`;
-    SELECT b, c FROM t;
+    SELECT 1 AS `a`; --> object
+    SELECT b, c FROM t; --> array
 END$$
 """,
         "filename": "table1.py",
         "exceptions": """
 from websql import UserError
 """,
-        "aio": '''
+        "pyaio": '''
 @coroutine
 def update(connection, i=None):
     """
     update the table1
     :param i: the i(BIGINT, IN))
-    :return ((\'a\',), ([\'b\', \'c\'],))
+    :return (("a",), [("b", "c")])
     """
 
     @coroutine
@@ -217,29 +217,79 @@ def update(connection, i=None):
         __cursor = __connection.cursor()
         try:
             yield from __cursor.callproc(b"`table1.update`", (i,))
-            return [
+            return (
                 (yield from __cursor.fetchall())[0],
                 (yield from __cursor.fetchall()),
-            ]
+            )
         finally:
             yield from __cursor.close()
 ''',
 
-        "pure": '''
+        "pynative": '''
 def update(connection, i=None):
     """
     update the table1
     :param i: the i(BIGINT, IN))
-    :return ((\'a\',), ([\'b\', \'c\'],))
+    :return (("a",), [("b", "c")])
     """
 
     def __query(__connection):
         with __connection.cursor() as __cursor:
             __cursor.callproc(b"`table1.update`", (i,))
-            return [
+            return (
                 __cursor.fetchall()[0],
                 __cursor.fetchall(),
-            ]
+            )
+'''
+    },
+    {
+        "sql": b"""
+CREATE PROCEDURE `table1.query` (i BIGINT) COMMENT "returns union"
+BEGIN
+    SELECT 1 AS `a`; --> object
+    SELECT b, c FROM t; --> items:array
+END$$
+""",
+        "filename": "table1.py",
+        "exceptions": """
+from websql import UserError
+""",
+        "pyaio": '''
+@coroutine
+def query(connection, i=None):
+    """
+    query the table1
+    :param i: the i(BIGINT, IN))
+    :return ("a", "items")
+    """
+
+    @coroutine
+    def __query(__connection):
+        __cursor = __connection.cursor()
+        try:
+            yield from __cursor.callproc(b"`table1.query`", (i,))
+            __result = (yield from __cursor.fetchall())[0]
+            __result.update({"items": (yield from __cursor.fetchall())})
+            return __result
+        finally:
+            yield from __cursor.close()
+''',
+
+        "pynative": '''
+def query(connection, i=None):
+    """
+    query the table1
+    :param i: the i(BIGINT, IN))
+    :return ("a", "items")
+    """
+
+    def __query(__connection):
+        with __connection.cursor() as __cursor:
+            __cursor.callproc(b"`table1.query`", (i,))
+            __result = __cursor.fetchall()[0]
+            __result.update({"items": __cursor.fetchall()})
+            return __result
+
 '''
     }
 ]

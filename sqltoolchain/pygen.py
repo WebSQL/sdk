@@ -19,6 +19,7 @@ __author__ = "@bg"
 import os
 import sys
 import warnings
+import itertools
 
 from datetime import datetime
 from functools import reduce
@@ -46,11 +47,10 @@ class TempTable:
 
 
 class Procedure:
-    def __init__(self, proc, read_only, queries, errors):
+    def __init__(self, proc, read_only, errors):
         self.__proc = proc
         self.read_only = read_only
         self.errors = errors
-        self.queries = queries
         self.module, _, self.name = proc.name.partition('.')
         if not self.name:
             self.name = self.module
@@ -66,23 +66,34 @@ class Procedure:
         else:
             self.brief = '%s%s' % (action, " the " + self.module if self.module else "")
 
-        if self.__proc.returns and self.__proc.returns.types:
+        if self.__proc.returns:
             result = []
-            for t, q in zip(self.__proc.returns.types, self.__proc.queries):
-                if t == "array":
-                    result.append([sorted(q.columns)])
-                elif t == 'object':
-                    result.append(set(q.columns))
-            if self.__proc.returns.merge:
-                result = reduce(lambda x, y: x | y, result, set())
+            for ret in self.__proc.returns:
+                if ret.type == "array":
+                    if ret.name == "":
+                        result.append([tuple(sorted(ret.fields))])
+                    else:
+                        result.append((ret.name,))
+                elif ret.type == 'object':
+                    result.append(tuple(sorted(ret.fields)))
+            if self.__proc.return_mod == "union":
+                columns_set = reduce(lambda x, y: x | set(y), result, set())
+                if len(columns_set) != reduce(lambda x, y: x + len(y), result, 0):
+                    duplicates = set()
+                    seen = set()
+                    for i in itertools.chain(*result):
+                        if i not in seen:
+                            seen.add(i)
+                        else:
+                            duplicates.add(i)
 
-            if len(result) == 1:
-                result = result[0]
-
-            if isinstance(result, list):
-                self.result_columns = tuple(tuple(sorted(x)) for x in result)
+                    warnings.warn("%s has duplicated fields: %s" % (self.__proc.name, ', '.join(sorted(duplicates))))
+                self.result_columns = tuple(sorted(columns_set))
             else:
-                self.result_columns = tuple(sorted(result))
+                if len(result) == 1:
+                    self.result_columns = result[0]
+                else:
+                    self.result_columns = tuple(result)
         else:
             self.result_columns = None
 
@@ -123,29 +134,33 @@ class Builder:
             self.write(self.syntax.doc_errors(procedure.errors))
         self.write(self.syntax.doc_close(), eol='\n\n')
 
-    def write_returns(self, returns):
+    def write_returns(self, returns, mod):
         """return formatted return value"""
         converters = {"object": self.syntax.return_object, "array": self.syntax.return_array}
+        syntax = self.syntax
 
-        if not returns or not returns.types:
-            return self.write(self.syntax.return_empty())
+        def format_return(r):
+            return syntax.format_result(r.name, converters[r.type])
 
-        if len(returns.types) == 1:
-            return self.write(self.syntax.return_single(converters[returns.types[0]]))
+        if not returns:
+            return self.write(syntax.return_empty())
 
-        if returns.merge:
-            self.write(self.syntax.return_merge_open(converters[returns.types[0]]))
+        if len(returns) == 1:
+            return self.write(syntax.return_one(format_return(returns[0])))
 
-            for i in range(1, len(returns.types)):
-                self.write(self.syntax.return_merge_item(converters[returns.types[i]]))
-            self.write(self.syntax.return_merge_close())
+        if mod == "union":
+            self.write(syntax.return_union_open(format_return(returns[0])))
+
+            for i in range(1, len(returns)):
+                self.write(syntax.return_union_item(format_return(returns[i])))
+            self.write(syntax.return_union_close())
         else:
-            self.write(self.syntax.return_multi_open())
+            self.write(syntax.return_tuple_open())
 
-            for i in range(0, len(returns.types)):
-                self.write(self.syntax.return_multi_item(converters[returns.types[i]]))
+            for i in range(0, len(returns)):
+                self.write(syntax.return_tuple_item(format_return(returns[i])))
 
-            self.write(self.syntax.return_multi_close())
+            self.write(syntax.return_tuple_close())
 
     def __enter__(self):
         pass
@@ -174,13 +189,8 @@ class Builder:
     def validate(procedure):
         """validate procedure description"""
         if procedure.returns:
-            if len(procedure.returns.types) != len(procedure.queries):
-                    warnings.warn("%s returns does not match queries: %s != %s" % (procedure.name, len(procedure.returns.types), len(procedure.queries)))
-
-            if procedure.returns.merge and any((x != "object") for x in procedure.returns.types):
-                    raise ValueError('SyntaxError: %s cannot merge of returns with different types: %s' % (procedure.name, procedure.returns.types))
-        elif procedure.queries:
-                warnings.warn("%s returns does not match queries: 0 != %s" % (procedure.name, len(procedure.queries)))
+            if procedure.return_mod == "union" and any((x.type != "object" and x.name == "") for x in procedure.returns):
+                raise ValueError('SyntaxError: %s cannot union of returns with different types: %s' % (procedure.name, procedure.returns))
 
     def write_procedure(self, procedure):
         """handle the procedure body"""
@@ -200,7 +210,7 @@ class Builder:
             self.write(self.syntax.temporary_table(procedure.temptable.name, procedure.temptable.columns))
 
         self.write(self.syntax.procedure_call(procedure.fullname, procedure.arguments))
-        self.write_returns(procedure.returns)
+        self.write_returns(procedure.returns, procedure.return_mod)
 
         self.write(self.syntax.cursor_close())
         self.write(self.syntax.body_close())
@@ -255,7 +265,7 @@ def process(args):
     for p in tokenizer.procedures():
         if not p.name.startswith('_'):
             builder.validate(p)
-            procedure = Procedure(p, tokenizer.is_read_only(p), tokenizer.queries(p), tokenizer.errors(p))
+            procedure = Procedure(p, tokenizer.is_read_only(p), tokenizer.errors(p))
             modules.setdefault(procedure.module or "__init__", []).append(procedure)
 
     count = 0
