@@ -260,7 +260,7 @@ def query(connection, i=None):
     """
     query the table1
     :param i: the i(BIGINT, IN))
-    :return ("a", "items")
+    :return ("a", "items.b", "items.c")
     """
 
     @coroutine
@@ -280,7 +280,7 @@ def query(connection, i=None):
     """
     query the table1
     :param i: the i(BIGINT, IN))
-    :return ("a", "items")
+    :return ("a", "items.b", "items.c")
     """
 
     def __query(__connection):

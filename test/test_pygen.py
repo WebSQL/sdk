@@ -102,4 +102,23 @@ class TestGenerator(TestCase):
 
         with catch_warnings(record=True) as log:
             pygen.Procedure(proc, True, [])
+            self.assertGreater(len(log), 0)
             self.assertIn("test has duplicated fields: a, c", str(log[0]))
+
+        r2.name = "c"
+        r2.type = "object"
+        r2.fields = ("q", "e")
+
+        with catch_warnings(record=True) as log:
+            pygen.Procedure(proc, True, [])
+            self.assertGreater(len(log), 0)
+            self.assertIn("test has duplicated fields: c", str(log[0]))
+
+        r2.name = "c"
+        r2.type = "array"
+        r2.fields = ("q", "e")
+
+        with catch_warnings(record=True) as log:
+            pygen.Procedure(proc, True, [])
+            self.assertGreater(len(log), 0)
+            self.assertIn("test has duplicated fields: c", str(log[0]))

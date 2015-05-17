@@ -68,19 +68,24 @@ class Procedure:
 
         if self.__proc.returns:
             result = []
+            named = set()
             for ret in self.__proc.returns:
                 if ret.type == "array":
-                    if ret.name == "":
-                        result.append([tuple(sorted(ret.fields))])
-                    else:
-                        result.append((ret.name,))
-                elif ret.type == 'object':
-                    result.append(tuple(sorted(ret.fields)))
+                    kind = lambda x: [x]
+                else:
+                    kind = lambda x: x
+
+                if ret.name == "":
+                    result.append(kind(tuple(sorted(ret.fields))))
+                else:
+                    named.add(ret.name)
+                    result.append(tuple('.'.join((ret.name, x)) for x in sorted(ret.fields)))
+
             if self.__proc.return_mod == "union":
                 columns_set = reduce(lambda x, y: x | set(y), result, set())
-                if len(columns_set) != reduce(lambda x, y: x + len(y), result, 0):
+                if len(columns_set) != reduce(lambda x, y: x + len(y), result, 0) or len(columns_set & named) != 0:
                     duplicates = set()
-                    seen = set()
+                    seen = named
                     for i in itertools.chain(*result):
                         if i not in seen:
                             seen.add(i)
