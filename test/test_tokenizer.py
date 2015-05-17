@@ -31,14 +31,14 @@ BEGIN
   where
    3;
 
-  SELECT 1; --> object
-  SELECT q.a FROM q; --> object
+  SELECT 1; -- > object
+  SELECT q.a FROM q; -- > object
 
   SELECT a FROM `b` WHERE t
   UNION
-    SELECT a FROM `c` WHERE y; --> object
+    SELECT a FROM `c` WHERE y; -- > object
 
-  SELECT EXISTS(SELECT 1 FROM t WHERE y) AS a, COUNT(*) AS b, c; --> object
+  SELECT EXISTS(SELECT 1 FROM t WHERE y) AS a, COUNT(*) AS b, c; -- > object
   SELECT MAX(b) AS a  FROM b a JOIN i WHERE j IN (SELECT y FROM d);
   SELECT COUNT(1) AS a,b,c AS d FROM y WHERE i ORDER BY u;
   SELECT FOUND_ROWS() AS d;
@@ -66,7 +66,7 @@ BEGIN
         FROM l
         WHERE
         j=1;
-    SELECT a FROM b; --> array
+    SELECT a FROM b; -- > array
 END$$
 
 UPDATE k SET l = 2 WHERE b=1;
@@ -96,10 +96,10 @@ END$$
 _TEST_PROCEDURE4 = """
 CREATE PROCEDURE `test_procedure4` ()
 BEGIN
-    SELECT a FROM b; --> array
-    SELECT a FROM b; --> name:array
-    SELECT a FROM b; --> object
-    SELECT a FROM b; --> name:object
+    SELECT a FROM b; -- > array
+    SELECT a FROM b; -- > name:array
+    SELECT a FROM b; -- > object
+    SELECT a FROM b; -- > name:object
     SELECT a FROM b;
 END$$
 """
@@ -107,8 +107,8 @@ END$$
 _TEST_PROCEDURE5 = """
 CREATE PROCEDURE `test_procedure4` () COMMENT "returns union"
 BEGIN
-    SELECT a FROM b; --> object
-    SELECT a FROM b; --> name:object
+    SELECT a FROM b; -- > object
+    SELECT a FROM b; -- > name:object
     SELECT a FROM b;
 END$$
 """

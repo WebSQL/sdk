@@ -111,7 +111,7 @@ def test_procedure1(connection, args=None):
         "sql": b"""
 CREATE PROCEDURE `test_procedure2` (c1 INT, c2 VARCHAR(255))
 BEGIN
-    SELECT `a` FROM t; --> array
+    SELECT `a` FROM t; -- > array
 END$$
 """,
         "exceptions": """
@@ -195,8 +195,8 @@ def procedure3(connection):
         "sql": b"""
 CREATE PROCEDURE `table1.update` (i BIGINT)
 BEGIN
-    SELECT 1 AS `a`; --> object
-    SELECT b, c FROM t; --> array
+    SELECT 1 AS `a`; -- > object
+    SELECT b, c FROM t; -- > array
 END$$
 """,
         "filename": "table1.py",
@@ -246,8 +246,8 @@ def update(connection, i=None):
         "sql": b"""
 CREATE PROCEDURE `table1.query` (i BIGINT) COMMENT "returns union"
 BEGIN
-    SELECT 1 AS `a`; --> object
-    SELECT b, c FROM t; --> items:array
+    SELECT 1 AS `a`; -- > object
+    SELECT b, c FROM t; -- > items:array
 END$$
 """,
         "filename": "table1.py",

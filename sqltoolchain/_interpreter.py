@@ -57,7 +57,7 @@ _ARGUMENT = Group(Optional(_DIRECTION, default='IN') + _SQL_IDENTIFIER + _TYPE)
 _ARGUMENTS = delimitedList(_ARGUMENT)
 _RETURN_MODIFIER = CaselessKeyword("union")
 _RETURN_TYPE = CaselessKeyword("object") | CaselessKeyword("array")
-_RETURN_HINT = Suppress(Literal("-->")) + Optional(_SQL_IDENTIFIER.setResultsName("return_name") + Suppress(Literal(":"))) + _RETURN_TYPE.setResultsName("return_type")
+_RETURN_HINT = Suppress(Literal("-- >")) + Optional(_SQL_IDENTIFIER.setResultsName("return_name") + Suppress(Literal(":"))) + _RETURN_TYPE.setResultsName("return_type")
 _META_FORMAT = Optional(_SQL_IDENTIFIER.setResultsName('table') + nestedExpr(content=delimitedList(Group(_SQL_IDENTIFIER + _TYPE)), ignoreExpr=None).setResultsName('columns') + Suppress(Literal(';'))) + \
     Optional(Suppress(CaselessKeyword("returns")) + _RETURN_MODIFIER.setResultsName("return_mod")) + lineEnd
 
