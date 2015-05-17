@@ -283,6 +283,14 @@ class SQLTokenizer:
         self._procedures = dict()
         self._current = None
 
+    @staticmethod
+    def _column_name(column):
+        if column.alias:
+            return column.alias[0]
+        if column[0].name:
+            return column[0].name[0].rpartition('.')[-1]
+        return str(column[0])
+
     def reset(self):
         self._procedures.clear()
         self._current = None
@@ -301,7 +309,7 @@ class SQLTokenizer:
     def on_select(self, tokens):
         """select statement handler"""
         if self._current and not tokens.into:
-            columns = tuple((x.alias and x.alias[0]) or (x[0].name and x[0].name[0]) or str(x) for x in tokens.columns)
+            columns = tuple(self._column_name(x) for x in tokens.columns)
             self._current.add_read_command(tokens.op, tokens.table and tokens.table[0], columns)
             self._current.add_return(tokens.return_name, tokens.return_type, columns)
 

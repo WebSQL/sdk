@@ -32,11 +32,11 @@ BEGIN
    3;
 
   SELECT 1; --> object
-  SELECT 3 AS a; --> object
+  SELECT q.a FROM q; --> object
 
-  SELECT `a` FROM `b` WHERE t
+  SELECT a FROM `b` WHERE t
   UNION
-    SELECT `a` FROM `c` WHERE y; --> object
+    SELECT a FROM `c` WHERE y; --> object
 
   SELECT EXISTS(SELECT 1 FROM t WHERE y) AS a, COUNT(*) AS b, c; --> object
   SELECT MAX(b) AS a  FROM b a JOIN i WHERE j IN (SELECT y FROM d);
