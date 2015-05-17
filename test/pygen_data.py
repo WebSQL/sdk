@@ -61,8 +61,8 @@ def test_procedure1(connection, args=None):
             yield from __cursor.execute(b"CREATE TEMPORARY TABLE `args`(`c1` INT, `c2` BINARY(255)) ENGINE=MEMORY;")
             yield from __cursor.execute_many(b"INSERT INTO `args` (`c1`, `c2`) VALUES (%s, %s);", __args)
             yield from __cursor.callproc(b"`test_procedure1`", ())
-            __result = (yield from __cursor.fetchall())[0]
-            __result.update((yield from __cursor.fetchall())[0])
+            __result = (yield from __cursor.fetchxall())[0]
+            __result.update((yield from __cursor.fetchxall())[0])
             return __result
         finally:
             yield from __cursor.close()
@@ -96,8 +96,8 @@ def test_procedure1(connection, args=None):
             __cursor.execute(b"CREATE TEMPORARY TABLE `args`(`c1` INT, `c2` BINARY(255)) ENGINE=MEMORY;")
             __cursor.execute_many(b"INSERT INTO `args` (`c1`, `c2`) VALUES (%s, %s);", __args)
             __cursor.callproc(b"`test_procedure1`", ())
-            __result = __cursor.fetchall()[0]
-            __result.update(__cursor.fetchall()[0])
+            __result = __cursor.fetchxall()[0]
+            __result.update(__cursor.fetchxall()[0])
             return __result
 
     try:
@@ -132,7 +132,7 @@ def test_procedure2(connection, c1=None, c2=None):
         __cursor = __connection.cursor()
         try:
             yield from __cursor.callproc(b"`test_procedure2`", (c1, c2))
-            return (yield from __cursor.fetchall())
+            return (yield from __cursor.fetchxall())
         finally:
             yield from __cursor.close()
 ''',
@@ -149,7 +149,7 @@ def test_procedure2(connection, c1=None, c2=None):
     def __query(__connection):
         with __connection.cursor() as __cursor:
             __cursor.callproc(b"`test_procedure2`", (c1, c2))
-            return __cursor.fetchall()
+            return __cursor.fetchxall()
 '''
     },
     {
@@ -218,8 +218,8 @@ def update(connection, i=None):
         try:
             yield from __cursor.callproc(b"`table1.update`", (i,))
             return (
-                (yield from __cursor.fetchall())[0],
-                (yield from __cursor.fetchall()),
+                (yield from __cursor.fetchxall())[0],
+                (yield from __cursor.fetchxall()),
             )
         finally:
             yield from __cursor.close()
@@ -237,8 +237,8 @@ def update(connection, i=None):
         with __connection.cursor() as __cursor:
             __cursor.callproc(b"`table1.update`", (i,))
             return (
-                __cursor.fetchall()[0],
-                __cursor.fetchall(),
+                __cursor.fetchxall()[0],
+                __cursor.fetchxall(),
             )
 '''
     },
@@ -268,8 +268,8 @@ def query(connection, i=None):
         __cursor = __connection.cursor()
         try:
             yield from __cursor.callproc(b"`table1.query`", (i,))
-            __result = (yield from __cursor.fetchall())[0]
-            __result.update({"items": (yield from __cursor.fetchall())})
+            __result = (yield from __cursor.fetchxall())[0]
+            __result.update({"items": (yield from __cursor.fetchxall())})
             return __result
         finally:
             yield from __cursor.close()
@@ -286,8 +286,8 @@ def query(connection, i=None):
     def __query(__connection):
         with __connection.cursor() as __cursor:
             __cursor.callproc(b"`table1.query`", (i,))
-            __result = __cursor.fetchall()[0]
-            __result.update({"items": __cursor.fetchall()})
+            __result = __cursor.fetchxall()[0]
+            __result.update({"items": __cursor.fetchxall()})
             return __result
 
 '''

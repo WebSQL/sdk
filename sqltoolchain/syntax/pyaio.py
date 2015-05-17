@@ -39,7 +39,7 @@ doc_indent = indent
 break_lines = 2
 
 
-return_array = """(yield from __cursor.fetchall())"""
+return_array = """(yield from __cursor.fetchxall())"""
 return_object = return_array + "[0]"
 
 
