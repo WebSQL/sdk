@@ -43,11 +43,14 @@ _ENDIF = _BEGIN_MACROS + Suppress(CaselessKeyword("ENDIF")) + lineEnd
 
 # ANALYSER
 _SKIP_TO_END = Suppress(SkipTo(Literal(";"), include=True))
-_SQL_IDENTIFIER = Suppress(Optional(Literal('`'))) + Word(alphanums + '_.') + Suppress(Optional(Literal('`')))
+_KEYWORD = Word(alphanums + '_.')
+_SQL_IDENTIFIER = Suppress(Optional(Literal('`'))) + _KEYWORD + Suppress(Optional(Literal('`')))
 _SQL_IDENTIFIERS = Group(delimitedList(_SQL_IDENTIFIER))
-_COLUMN = Group(_SQL_IDENTIFIER + Optional(CaselessKeyword('AS') + _SQL_IDENTIFIER))
-_COLUMNS = Group(delimitedList(_COLUMN))
-_EXPRESSION = (CaselessKeyword("SELECT") | CaselessKeyword("EXISTS")) + Suppress(SkipTo(CaselessKeyword("AS"))) + _SQL_IDENTIFIER
+_COLUMN = Group(Group(Group(Literal("(") + CaselessKeyword("SELECT") + SkipTo(Literal(")"), include=True)) |
+                Group(_KEYWORD + Literal("(") + SkipTo(")", include=True)) |
+                _SQL_IDENTIFIER.setResultsName("name")) +
+                Optional(CaselessKeyword("AS") + _SQL_IDENTIFIER.setResultsName("alias")))
+_COLUMNS = delimitedList(_COLUMN)
 _DIRECTION = oneOf('INOUT IN OUT', caseless=True)
 _TYPE = Combine(Word(alphanums + '_') + Optional('(' + Word(nums) + ')'))
 _ARGUMENT = Group(Optional(_DIRECTION, default='IN') + _SQL_IDENTIFIER + _TYPE)
@@ -67,7 +70,7 @@ _PROCEDURE_TOKEN = CaselessKeyword("CREATE") + Optional(CaselessKeyword('DEFINER
 _PROCEDURE_END_TOKEN = Suppress(Regex('END\s*\$\$'))
 
 _SELECT_TOKEN = CaselessKeyword("SELECT").setResultsName('op') + \
-    (_COLUMNS | _EXPRESSION).setResultsName('columns') + \
+    _COLUMNS.setResultsName('columns') + \
     Optional(Group(CaselessKeyword("INTO") + _SQL_IDENTIFIERS).setResultsName('into')) + \
     Optional(Suppress(CaselessKeyword("FROM")) + _SQL_IDENTIFIER.setResultsName('table')) + _SKIP_TO_END + \
     Optional(_RETURN_HINT)
@@ -255,8 +258,8 @@ class _Procedure:
         self.modifiers.append(self.command_class(*args))
         self.read_only = False
 
-    def add_return(self, name, return_type, fields):
-        self.returns.append(self.returns_class(name and name[0], return_type or _DEFAULT_RETURN_TYPE, fields))
+    def add_return(self, name, return_type, columns):
+        self.returns.append(self.returns_class(name and name[0], return_type or _DEFAULT_RETURN_TYPE, columns))
 
     def __repr__(self):
         return self.name
@@ -298,9 +301,9 @@ class SQLTokenizer:
     def on_select(self, tokens):
         """select statement handler"""
         if self._current and not tokens.into:
-            fields = tuple(x[-1] for x in tokens.columns)
-            self._current.add_read_command(tokens.op, tokens.table and tokens.table[0], fields)
-            self._current.add_return(tokens.return_name, tokens.return_type, fields)
+            columns = tuple((x.alias and x.alias[0]) or (x[0].name and x[0].name[0]) or str(x) for x in tokens.columns)
+            self._current.add_read_command(tokens.op, tokens.table and tokens.table[0], columns)
+            self._current.add_return(tokens.return_name, tokens.return_type, columns)
 
     def on_insert(self, tokens):
         """insert statement handler"""

@@ -38,10 +38,10 @@ BEGIN
   UNION
     SELECT `a` FROM `c` WHERE y; --> object
 
-  SELECT (EXISTS(SELECT 1 FROM t WHERE y)) AS a; --> object
-  SELECT a FROM b a JOIN i WHERE j IN (SELECT y FROM d);
-
-  SELECT a,b,c AS d FROM y WHERE i ORDER BY u;
+  SELECT EXISTS(SELECT 1 FROM t WHERE y) AS a, COUNT(*) AS b, c; --> object
+  SELECT MAX(b) AS a  FROM b a JOIN i WHERE j IN (SELECT y FROM d);
+  SELECT COUNT(1) AS a,b,c AS d FROM y WHERE i ORDER BY u;
+  SELECT FOUND_ROWS() AS d;
 END$$
 
 SELECT 2 INTO a2 FROM t2 WHERE k=1;
@@ -145,13 +145,16 @@ class TestTokenizer(TestCase):
         self.assertEqual(1, len(self.tokenizer._procedures))
         procedure = self.tokenizer._procedures['test_procedure1']
         self.assertEqual('test_procedure1', procedure.name)
-        self.assertEqual(6, len(procedure.queries))
+        self.assertEqual(7, len(procedure.queries))
         self.assertEqual(0, len(procedure.modifiers))
         self.assertTrue(self.tokenizer.is_read_only(procedure))
         self.assertEqual(('1',), procedure.queries[0].columns)
+        self.assertEqual(('a',), procedure.queries[1].columns)
+        self.assertEqual(('a',), procedure.queries[2].columns)
+        self.assertEqual(('a', 'b', 'c'), procedure.queries[3].columns)
+        self.assertEqual(('a',), procedure.queries[4].columns)
         self.assertEqual(('a', 'b', 'd'), procedure.queries[5].columns)
-        for i in range(1, 5):
-            self.assertEqual(('a',), procedure.queries[1].columns)
+        self.assertEqual(('d',), procedure.queries[6].columns)
 
     def test_scan_write_statement(self):
         """ test scan statements that modify data like insert,update,delete """
@@ -189,7 +192,7 @@ class TestTokenizer(TestCase):
         """ test parse meta """
         self.tokenizer.parse(_TEST_PROCEDURE1)
         returns = self.tokenizer._procedures["test_procedure1"].returns
-        self.assertEqual(6, len(returns))
+        self.assertEqual(7, len(returns))
         self.assertTrue(any(x.type == "object" and x.name == "" for x in returns))
 
         self.tokenizer.reset()
