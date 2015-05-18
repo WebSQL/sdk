@@ -117,4 +117,4 @@ def procedure_call(name, args):
     if len(args) == 1:
         args_str += ","
 
-    return '            yield from __cursor.callproc(b"`{0}`", ({1}))'.format(name, args_str)
+    return '            yield from __cursor.callproc(b"{0}", ({1}))'.format(name, args_str)

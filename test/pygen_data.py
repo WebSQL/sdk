@@ -60,7 +60,7 @@ def test_procedure1(connection, args=None):
             yield from __cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `args`;")
             yield from __cursor.execute(b"CREATE TEMPORARY TABLE `args`(`c1` INT, `c2` BINARY(255)) ENGINE=MEMORY;")
             yield from __cursor.execute_many(b"INSERT INTO `args` (`c1`, `c2`) VALUES (%s, %s);", __args)
-            yield from __cursor.callproc(b"`test_procedure1`", ())
+            yield from __cursor.callproc(b"test_procedure1", ())
             __result = (yield from __cursor.fetchxall())[0]
             __result.update((yield from __cursor.fetchxall())[0])
             return __result
@@ -95,7 +95,7 @@ def test_procedure1(connection, args=None):
             __cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `args`;")
             __cursor.execute(b"CREATE TEMPORARY TABLE `args`(`c1` INT, `c2` BINARY(255)) ENGINE=MEMORY;")
             __cursor.execute_many(b"INSERT INTO `args` (`c1`, `c2`) VALUES (%s, %s);", __args)
-            __cursor.callproc(b"`test_procedure1`", ())
+            __cursor.callproc(b"test_procedure1", ())
             __result = __cursor.fetchxall()[0]
             __result.update(__cursor.fetchxall()[0])
             return __result
@@ -131,7 +131,7 @@ def test_procedure2(connection, c1=None, c2=None):
     def __query(__connection):
         __cursor = __connection.cursor()
         try:
-            yield from __cursor.callproc(b"`test_procedure2`", (c1, c2))
+            yield from __cursor.callproc(b"test_procedure2", (c1, c2))
             return (yield from __cursor.fetchxall())
         finally:
             yield from __cursor.close()
@@ -148,7 +148,7 @@ def test_procedure2(connection, c1=None, c2=None):
 
     def __query(__connection):
         with __connection.cursor() as __cursor:
-            __cursor.callproc(b"`test_procedure2`", (c1, c2))
+            __cursor.callproc(b"test_procedure2", (c1, c2))
             return __cursor.fetchxall()
 '''
     },
@@ -174,7 +174,7 @@ def procedure3(connection):
     def __query(__connection):
         __cursor = __connection.cursor()
         try:
-            yield from __cursor.callproc(b"`procedure3`", ())
+            yield from __cursor.callproc(b"procedure3", ())
         finally:
             yield from __cursor.close()
 ''',
@@ -188,7 +188,7 @@ def procedure3(connection):
     @transaction
     def __query(__connection):
         with __connection.cursor() as __cursor:
-            __cursor.callproc(b"`procedure3`", ())
+            __cursor.callproc(b"procedure3", ())
 '''
     },
     {
@@ -216,7 +216,7 @@ def update(connection, i=None):
     def __query(__connection):
         __cursor = __connection.cursor()
         try:
-            yield from __cursor.callproc(b"`table1.update`", (i,))
+            yield from __cursor.callproc(b"table1.update", (i,))
             return (
                 (yield from __cursor.fetchxall())[0],
                 (yield from __cursor.fetchxall()),
@@ -235,7 +235,7 @@ def update(connection, i=None):
 
     def __query(__connection):
         with __connection.cursor() as __cursor:
-            __cursor.callproc(b"`table1.update`", (i,))
+            __cursor.callproc(b"table1.update", (i,))
             return (
                 __cursor.fetchxall()[0],
                 __cursor.fetchxall(),
@@ -267,7 +267,7 @@ def query(connection, i=None):
     def __query(__connection):
         __cursor = __connection.cursor()
         try:
-            yield from __cursor.callproc(b"`table1.query`", (i,))
+            yield from __cursor.callproc(b"table1.query", (i,))
             __result = (yield from __cursor.fetchxall())[0]
             __result.update({"items": (yield from __cursor.fetchxall())})
             return __result
@@ -285,7 +285,7 @@ def query(connection, i=None):
 
     def __query(__connection):
         with __connection.cursor() as __cursor:
-            __cursor.callproc(b"`table1.query`", (i,))
+            __cursor.callproc(b"table1.query", (i,))
             __result = __cursor.fetchxall()[0]
             __result.update({"items": __cursor.fetchxall()})
             return __result
