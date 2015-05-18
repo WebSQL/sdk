@@ -26,7 +26,7 @@ _TEST_FILES = {
 #include "common/func.sql"
 
 select $var1 from $var2 where ${var3};
-$f1("test1", `test2`);
+$f1(MAX(*), `test2`);
 $f2(*, as23!@#%4);
 """,
     "./common/func.sql": """
@@ -56,7 +56,7 @@ _EXPECTED = """
 
 
 select "var1" from 'var2' where `var3`;
-select "test1" from `test2`;
+select MAX(*) from `test2`;
 select as23!@#%4 from *; select * from as23!@#%4;
 """
 

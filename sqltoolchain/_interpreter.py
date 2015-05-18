@@ -26,7 +26,7 @@ import warnings
 # PREPROCESSOR
 _BEGIN_MACROS = lineStart + Suppress(Literal('#'))
 _MACRO_IDENTIFIER = Word(alphanums + '_')
-_MACRO_VALUE = Word(alphanums + "!#%&*+-./:<=>?@[\]^_~\"'`")
+_MACRO_VALUE = Combine(_MACRO_IDENTIFIER + Literal("(") + SkipTo(Literal(")"), include=True)) | Word(alphanums + "!#%&*+-./:<=>?@[\]^_~\"'`")
 _MACRO_IDENTIFIERS = delimitedList(_MACRO_IDENTIFIER, combine=False)
 _MACRO_VALUES = delimitedList(_MACRO_VALUE, combine=False)
 _INCLUDE = _BEGIN_MACROS + CaselessKeyword("INCLUDE") + quotedString.setResultsName('filename')
