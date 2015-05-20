@@ -25,7 +25,7 @@ def readme():
 
 setup(
     name="sqltoolchain",
-    version="0.1.2",
+    version="0.1.3",
     description='The toolchain to make work with SQL easier',
     packages=["sqltoolchain", "sqltoolchain.syntax"],
     requires=["pyparsing"],
