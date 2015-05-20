@@ -24,14 +24,15 @@ CREATE PROCEDURE `test_procedure1` ()
 BEGIN
     SELECT 1 AS `a`;
     SELECT 2 AS `b`;
-    CALL __throw("TestError", "test error")
+    IF FOUND_ROWS() == 0 THEN CALL __throw("TestError", CONCAT("test error: ", "test")); END IF;
+    CALL __throw("TestError", "test");
 END$$
 """,
         "exceptions": """
 from websql import UserError
 
 
-class TestErrorError(UserError):
+class TestError(UserError):
     pass
 """,
         "pyaio": '''

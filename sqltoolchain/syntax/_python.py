@@ -82,4 +82,4 @@ def return_union_close():
 
 def exception_class(name):
     """declare exception class"""
-    return "class {0}Error(UserError):\n    pass".format(name)
+    return "class {0}(UserError):\n    pass".format(name)

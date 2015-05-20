@@ -83,8 +83,8 @@ _UPDATE_TOKEN = CaselessKeyword("UPDATE").setResultsName('op') + _SQL_IDENTIFIER
 _DELETE_TOKEN = CaselessKeyword("DELETE").setResultsName('op') + CaselessKeyword("FROM") + \
     _SQL_IDENTIFIER.setResultsName('table') + _SKIP_TO_END
 
-_THROW_TOKEN = Suppress(CaselessKeyword("CALL")) + CaselessKeyword("__throw") + \
-    nestedExpr(content=quotedString.setResultsName('error_class') + Suppress(',') + quotedString, ignoreExpr=None)
+_THROW_TOKEN = Suppress(CaselessKeyword("CALL")) + Optional(Literal("`")) + CaselessKeyword("__throw") + Optional(Literal("`")) + \
+    nestedExpr(content=(quotedString.setResultsName('error_class') + Suppress(',') + Suppress(SkipTo(Literal(")")))), ignoreExpr=None)
 
 _CALL_TOKEN = CaselessKeyword("CALL") + _SQL_IDENTIFIER.setResultsName('procedure') + _SKIP_TO_END
 
