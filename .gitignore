@@ -6,3 +6,5 @@ __pycache__/
 /build
 /dist
 /MANIFEST
+/doc/_build
+/wsql_sdk.egg-info

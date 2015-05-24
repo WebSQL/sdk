@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from setuptools import setup
-import os
 
 try:
     from sphinx.setup_command import BuildDoc as _BuildDoc
@@ -19,21 +18,21 @@ except ImportError:
 
 
 def readme():
-    with open(os.path.join('README')) as r:
+    with open('README') as r:
         return r.read()
 
 
 setup(
-    name="sqltoolchain",
-    version="0.1.3",
-    description='The toolchain to make work with SQL easier',
-    packages=["sqltoolchain", "sqltoolchain.syntax"],
+    name="wsql_sdk",
+    version="0.2.1",
+    description='The chain of tools, that to make work with SQL easier',
+    packages=["wsql_sdk", "wsql_sdk.syntax"],
     requires=["pyparsing"],
-    author="@bg",
+    author="Bulat Gaifullin",
     author_email='gaifullinbf@gmail.com',
-    maintainer='@bg',
+    maintainer='Bulat Gaifullin',
     maintainer_email='gaifullinbf@gmail.com',
-    url='https://github.com/WebSQL/sqltoolchain',
+    url='https://github.com/WebSQL/sdk',
     license='MIT',
     long_description=readme(),
     classifiers=[
@@ -53,8 +52,8 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'sql-pygen=sqltoolchain.pygen:main',
-            'sql-preprocessor=sqltoolchain.preprocessor:main',
+            'wsql-codegen=wsql_sdk.codegen:main',
+            'wsql-trans=wsql_sdk.translator:main',
         ],
     }
 )

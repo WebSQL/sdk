@@ -1,7 +1,5 @@
-#!/bin/python3
 """
-Copyright (c) 2015 WebSQL
-This file is part of sqltoolchain
+This file is part of WSQL-SDK
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
@@ -14,6 +12,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
 __author__ = "@bg"
 
 import fnmatch
@@ -22,7 +21,7 @@ import warnings
 from ._interpreter import MacrosTokenizer
 
 
-class Preprocessor(MacrosTokenizer):
+class Translator(MacrosTokenizer):
     def __init__(self, output, close_output=False):
         super().__init__()
         self.output = output
@@ -81,10 +80,10 @@ def parse_arguments(argv=None):
 def main(argv=None):  # pragma: no cover
     args = parse_arguments(argv)
     if args.output:
-        builder = Preprocessor(open(args.output, 'w'), True)
+        builder = Translator(open(args.output, 'w'), True)
     else:
         import sys
-        builder = Preprocessor(sys.stdout)
+        builder = Translator(sys.stdout)
 
     builder.compile(args.input)
 

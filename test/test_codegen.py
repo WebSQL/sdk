@@ -1,6 +1,5 @@
 """
-Copyright (c) 2015 WebSQL
-This file is part of sqltoolchain
+This file is part of WSQL-SDK
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
@@ -13,17 +12,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
 __author__ = "@bg"
 
 from unittest import TestCase, mock
 from io import BytesIO, StringIO
 from warnings import catch_warnings
-from sqltoolchain import pygen
+from wsql_sdk import codegen
 
 try:
-    from test.pygen_data import TEST_DATA
+    from test.codegen_data import TEST_DATA
 except ImportError:  # pragma: no cover
-    from .pygen_data import TEST_DATA
+    from .codegen_data import TEST_DATA
 
 
 class Dummy:
@@ -45,11 +45,11 @@ class TestGenerator(TestCase):
         proc.return_mod = "union"
         proc.queries = []
 
-        self.assertRaisesRegex(ValueError, "cannot union of returns with different types", pygen.Builder.validate, proc)
+        self.assertRaisesRegex(ValueError, "cannot union of returns with different types", codegen.Builder.validate, proc)
 
     def test_parse_cmdline(self):
         """ test parse commandline arguments """
-        args = pygen.parse_arguments(["-i", "test.sql", "-o", "build", "-s", "pyaio"])
+        args = codegen.parse_arguments(["-i", "test.sql", "-o", "build", "-s", "pyaio"])
         self.assertEqual("test.sql", args.input)
         self.assertEqual("build", args.outdir)
         self.assertEqual("pyaio", args.syntax)
@@ -71,7 +71,7 @@ class TestGenerator(TestCase):
                     return r
 
                 with mock.patch('builtins.open', lambda f, *a, **kw: _open_mock(f)):
-                    pygen.process(args)
+                    codegen.process(args)
 
                 filename = data.get("filename", "__init__.py")
 
@@ -101,7 +101,7 @@ class TestGenerator(TestCase):
         proc.returns = (r1, r2)
 
         with catch_warnings(record=True) as log:
-            pygen.Procedure(proc, True, [])
+            codegen.Procedure(proc.name, "", proc, True, [])
             self.assertGreater(len(log), 0)
             self.assertIn("test has duplicated fields: a, c", str(log[0]))
 
@@ -110,7 +110,7 @@ class TestGenerator(TestCase):
         r2.fields = ("q", "e")
 
         with catch_warnings(record=True) as log:
-            pygen.Procedure(proc, True, [])
+            codegen.Procedure(proc.name, "", proc, True, [])
             self.assertGreater(len(log), 0)
             self.assertIn("test has duplicated fields: c", str(log[0]))
 
@@ -119,6 +119,6 @@ class TestGenerator(TestCase):
         r2.fields = ("q", "e")
 
         with catch_warnings(record=True) as log:
-            pygen.Procedure(proc, True, [])
+            codegen.Procedure(proc.name, "", proc, True, [])
             self.assertGreater(len(log), 0)
             self.assertIn("test has duplicated fields: c", str(log[0]))

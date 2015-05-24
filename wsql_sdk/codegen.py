@@ -1,7 +1,5 @@
-#!/bin/python3
 """
-Copyright (c) 2015 WebSQL
-This file is part of sqltoolchain
+This file is part of WSQL-SDK
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
@@ -14,6 +12,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
 __author__ = "@bg"
 
 import os
@@ -31,6 +30,7 @@ _THIS_DIR = os.path.dirname(__file__)
 
 
 class Argument:
+    """The procedure argument description"""
     def __init__(self, argument):
         self.__argument = argument
         self.brief = 'the ' + ' of '.join(reversed(argument.name.split('_'))) + '({0.type}, {0.direction})'.format(argument)
@@ -40,6 +40,7 @@ class Argument:
 
 
 class TempTable:
+    """The temporary table description"""
     def __init__(self, temptable):
         self.name = temptable.name
         self.brief = 'list of {' + ','.join('{0.name}({0.type})'.format(x) for x in temptable.columns) + '}'
@@ -47,14 +48,12 @@ class TempTable:
 
 
 class Procedure:
-    def __init__(self, proc, read_only, errors):
+    """The procedure description"""
+    def __init__(self, module, name, proc, read_only, errors):
+        self.module, self.name = module, name
         self.__proc = proc
         self.read_only = read_only
         self.errors = errors
-        self.module, _, self.name = proc.name.partition('.')
-        if not self.name:
-            self.name = self.module
-            self.module = ""
 
         self.arguments = [Argument(x) for x in proc.arguments]
         if proc.temptable:
@@ -116,6 +115,7 @@ class Builder:
         self.stream = None
 
     def write(self, text, eol="\n"):
+        """write text to output stream"""
         if text is not None:
             self.stream.write(text)
             self.stream.write(eol)
@@ -232,12 +232,13 @@ class Builder:
 
 
 def create_builder(name):
-    """load builder by name"""
+    """load builder by syntax"""
     loader = machinery.SourceFileLoader("syntax." + name, os.path.join(_THIS_DIR, 'syntax', name + ".py"))
     return Builder(loader.load_module())
 
 
 def load_input(source):
+    """load the input"""
     if isinstance(source, str):  # pragma: no cover
         with open(source, 'r', encoding='utf8') as stream:
             return stream.read()
@@ -261,6 +262,8 @@ def parse_arguments(argv=None):
 
 
 def process(args):
+    """generate code according to specified parameters"""
+
     tokenizer = SQLTokenizer()
     tokenizer.parse(load_input(args.input))
 
@@ -268,10 +271,17 @@ def process(args):
 
     modules = {}
     for p in tokenizer.procedures():
-        if not p.name.startswith('_'):
-            builder.validate(p)
-            procedure = Procedure(p, tokenizer.is_read_only(p), tokenizer.errors(p))
-            modules.setdefault(procedure.module or "__init__", []).append(procedure)
+        module, _, name = p.name.partition('.')
+        if len(name) == 0:
+            name = module
+            module = ""
+
+        if name.startswith("_") or module.startswith("_"):
+            continue
+
+        builder.validate(p)
+        procedure = Procedure(module, name, p, tokenizer.is_read_only(p), tokenizer.errors(p))
+        modules.setdefault(procedure.module or "__init__", []).append(procedure)
 
     count = 0
     for module in modules:

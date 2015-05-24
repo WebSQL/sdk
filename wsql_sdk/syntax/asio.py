@@ -1,6 +1,5 @@
 """
-Copyright (c) 2015 WebSQL
-This file is part of sqltoolchain
+This file is part of WSQL-SDK
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
@@ -15,3 +14,4 @@ SOFTWARE.
 """
 
 __author__ = "@bg"
+
