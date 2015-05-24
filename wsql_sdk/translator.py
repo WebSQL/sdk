@@ -72,8 +72,8 @@ class Translator(MacrosTokenizer):
 def parse_arguments(argv=None):
     from argparse import ArgumentParser
     parser = ArgumentParser()
-    parser.add_argument('-i', '--input', help='input file', required=True)
-    parser.add_argument('-o', '--output', help='output file, by default write stdout')
+    parser.add_argument('input', nargs=1, help='input file')
+    parser.add_argument('output', nargs='?', help='output file')
     return parser.parse_args(argv)
 
 
@@ -85,7 +85,7 @@ def main(argv=None):  # pragma: no cover
         import sys
         builder = Translator(sys.stdout)
 
-    builder.compile(args.input)
+    builder.compile(args.input[0])
 
 if __name__ == "__main__":
     main()

@@ -165,6 +165,10 @@ class TestCompiler(TestCase):
 
     def test_arguments_parse(self):
         """ test cmdline arguments parsing """
-        args = translator.parse_arguments(["-i", "test.sql", "-o", "test_o.sql"])
-        self.assertEqual("test.sql", args.input)
+        args = translator.parse_arguments(["test.sql", "test_o.sql"])
+        self.assertEqual("test.sql", args.input[0])
         self.assertEqual("test_o.sql", args.output)
+        args = translator.parse_arguments(["test.sql"])
+        self.assertEqual("test.sql", args.input[0])
+        self.assertIsNone(args.output)
+
