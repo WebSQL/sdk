@@ -20,6 +20,9 @@ file_header = """\
 # {timestamp}
 """
 
+includes_for_exceptions = """from wsql import UserError"""
+
+
 def doc_open():
     """start doc-string"""
     return '    """'

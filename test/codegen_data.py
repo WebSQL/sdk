@@ -38,7 +38,7 @@ END$$
 
 """,
         "exceptions": """
-from websql import UserError
+from wsql import UserError
 
 
 class TestError(UserError):
@@ -125,7 +125,7 @@ BEGIN
 END$$
 """,
         "exceptions": """
-from websql import UserError
+from wsql import UserError
 """,
         "pyaio": '''
 @coroutine
@@ -170,7 +170,7 @@ BEGIN
 END$$
 """,
         "exceptions": """
-from websql import UserError
+from wsql import UserError
 """,
         "pyaio": '''
 @coroutine
@@ -211,7 +211,7 @@ END$$
 """,
         "filename": "table1.py",
         "exceptions": """
-from websql import UserError
+from wsql import UserError
 """,
         "pyaio": '''
 @coroutine
@@ -262,7 +262,7 @@ END$$
 """,
         "filename": "table1.py",
         "exceptions": """
-from websql import UserError
+from wsql import UserError
 """,
         "pyaio": '''
 @coroutine

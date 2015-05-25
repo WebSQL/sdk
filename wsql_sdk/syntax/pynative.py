@@ -22,8 +22,6 @@ from wsql import Error, handle_error
 from wsql.cluster import transaction
 from . import exceptions"""
 
-includes_for_exceptions = """\nfrom websql import UserError"""
-
 file_ext = ".py"
 indent = "    "
 doc_indent = indent
