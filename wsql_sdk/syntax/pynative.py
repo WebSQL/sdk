@@ -26,8 +26,8 @@ file_header = """
 
 
 includes_for_api = """
-from websql import Error, handle_error
-from websql.cluster import transaction
+from wsql import Error, handle_error
+from wsql.cluster import transaction
 from . import exceptions"""
 
 includes_for_exceptions = """\nfrom websql import UserError"""

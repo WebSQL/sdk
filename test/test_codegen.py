@@ -49,7 +49,7 @@ class TestGenerator(TestCase):
 
     def test_parse_cmdline(self):
         """ test parse commandline arguments """
-        args = codegen.parse_arguments(["-i", "test.sql", "-o", "build", "-s", "pyaio"])
+        args = codegen.parse_arguments(["-o", "build", "-s", "pyaio", "test.sql"])
         self.assertEqual("test.sql", args.input)
         self.assertEqual("build", args.outdir)
         self.assertEqual("pyaio", args.syntax)

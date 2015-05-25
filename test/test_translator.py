@@ -47,17 +47,10 @@ $f2(*, as23!@#%4);
 """
 }
 
-_EXPECTED = """
-
-
-
-
-
-
-
+_EXPECTED = """\
 select "var1" from 'var2' where `var3`;
 select MAX(*) from `test2`;
-select as23!@#%4 from *; select * from as23!@#%4;
+select as23!@#%4 from *; select * from as23!@#%4;\
 """
 
 
@@ -110,7 +103,7 @@ class TestCompiler(TestCase):
             with mock.patch('os.listdir', _listdir_mock):
                 self.trans.compile('main.sql')
                 self.output.seek(0)
-                self.assertEqual(_EXPECTED, self.output.read())
+                self.assertEqual(_EXPECTED, self.output.read().strip())
 
     def test_if(self):
         """ test conditions """

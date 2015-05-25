@@ -46,8 +46,8 @@ class TestError(UserError):
 """,
         "pyaio": '''
 from asyncio import coroutine
-from websql import Error, handle_error
-from websql.cluster import transaction
+from wsql import Error, handle_error
+from wsql.cluster import transaction
 from . import exceptions
 
 
@@ -84,8 +84,8 @@ def test_procedure1(connection, args=None):
 ''',
 
         "pynative": '''
-from websql import Error, handle_error
-from websql.cluster import transaction
+from wsql import Error, handle_error
+from wsql.cluster import transaction
 from . import exceptions
 
 

@@ -255,8 +255,8 @@ def parse_arguments(argv=None):
     available_syntax = [x.partition('.')[0] for x in os.listdir(os.path.join(_THIS_DIR, 'syntax')) if not x.startswith('_')]
 
     parser = ArgumentParser()
-    parser.add_argument('-i', '--input', help='source file, by default input stream', default=sys.stdin)
-    parser.add_argument('-o', '--outdir', help='output dir', default='.')
+    parser.add_argument('input', nargs='?', help='source file, by default input stream', default=sys.stdin)
+    parser.add_argument('-o', '--outdir', help='output dir', default=os.curdir)
     parser.add_argument('-s', '--syntax', help='the syntax', choices=available_syntax, required=True)
     return parser.parse_args(argv)
 
