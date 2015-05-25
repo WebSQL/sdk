@@ -17,14 +17,6 @@ __author__ = "@bg"
 
 from wsql_sdk.syntax._python import *
 
-
-file_header = """
-# auto-generated file by WebSQL-Toolkit
-# It is legacy version with lower performance, to get best result please use asynchronous version
-# {timestamp}
-"""
-
-
 includes_for_api = """
 from wsql import Error, handle_error
 from wsql.cluster import transaction

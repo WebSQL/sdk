@@ -18,12 +18,6 @@ from wsql_sdk.syntax._python import *
 __author__ = "@bg"
 
 
-file_header = """
-# auto-generated file by WebSQL-Toolkit
-# {timestamp}
-"""
-
-
 includes_for_api = """
 from asyncio import coroutine
 from wsql import Error, handle_error

@@ -15,6 +15,10 @@ SOFTWARE.
 
 __author__ = "@bg"
 
+file_header = """\
+# Auto-generated file by wsql-codegen(part of WSQL-SDK)
+# {timestamp}
+"""
 
 def doc_open():
     """start doc-string"""
