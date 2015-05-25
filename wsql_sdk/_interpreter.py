@@ -24,8 +24,9 @@ import warnings
 
 # PREPROCESSOR
 _BEGIN_MACROS = lineStart + Suppress(Literal('#'))
-_MACRO_IDENTIFIER = Word(alphanums + '_')
-_MACRO_VALUE = Combine(_MACRO_IDENTIFIER + Literal("(") + SkipTo(Literal(")"), include=True)) | Word(alphanums + "!#%&*+-./:<=>?@[\]^_~\"'`")
+_MACRO_IDENTIFIER = Word(alphanums + '_', excludeChars='"\'')
+_MACRO_VALUE = Combine(_MACRO_IDENTIFIER + Literal("(") + SkipTo(Literal(")"), include=True)) | \
+    Word(alphanums + "!#%&*+-./:<=>?@[\]^_~`") | quotedString
 _MACRO_IDENTIFIERS = delimitedList(_MACRO_IDENTIFIER, combine=False)
 _MACRO_VALUES = delimitedList(_MACRO_VALUE, combine=False)
 _INCLUDE = _BEGIN_MACROS + CaselessKeyword("INCLUDE") + quotedString.setResultsName('filename')
@@ -34,7 +35,8 @@ _DEFINE = _BEGIN_MACROS + CaselessKeyword("DEFINE") + _MACRO_IDENTIFIER.setResul
 
 _EXPAND = (Suppress('${') + _MACRO_IDENTIFIER.setResultsName('name') + Suppress('}')) | \
     Or((Suppress('$') + _MACRO_IDENTIFIER.setResultsName('name'),
-        (Suppress('$') + _MACRO_IDENTIFIER.setResultsName('name') + nestedExpr(content=_MACRO_VALUES, ignoreExpr=None).setResultsName('args'))))
+        (Suppress('$') + _MACRO_IDENTIFIER.setResultsName('name') +
+         nestedExpr(content=delimitedList(_MACRO_VALUE), ignoreExpr=None).setResultsName('args'))))
 
 _IF = _BEGIN_MACROS + Suppress(CaselessKeyword('IF')) + Regex(".+$").setResultsName('condition')
 _ELSE = _BEGIN_MACROS + Suppress(CaselessKeyword('ELSE')) + lineEnd

@@ -26,14 +26,16 @@ _TEST_FILES = {
 #include "common/func.sql"
 
 select $var1 from $var2 where ${var3};
-$f1(MAX(*), `test2`);
+$f1(*, `test2`);
 $f2(*, as23!@#%4);
+$f3("a", "b c");
 """,
     "./common/func.sql": """
 #include "vars.sql"
 #define f1(a,b) select $a from $b
 #define f2(d, e) select $e from $d;\
  select $d from $e
+#define f3(a, b) CALL p($a, $b)
 """,
     "./common/vars.sql": """
 #define var1 "var1"
@@ -49,8 +51,9 @@ $f2(*, as23!@#%4);
 
 _EXPECTED = """\
 select "var1" from 'var2' where `var3`;
-select MAX(*) from `test2`;
-select as23!@#%4 from *; select * from as23!@#%4;\
+select * from `test2`;
+select as23!@#%4 from *; select * from as23!@#%4;
+CALL p("a", "b c");\
 """
 
 
