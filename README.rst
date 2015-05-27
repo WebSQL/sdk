@@ -52,7 +52,7 @@ wsql-codegen:
 -------------
 
 Generate the native code to work with SQL procedures.
-Now supports python3.
+Now supports python3 native and aio.
 The C++ under development.
 Required `WSQL`_.
 

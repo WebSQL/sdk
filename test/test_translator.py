@@ -25,8 +25,8 @@ _TEST_FILES = {
     "./main.sql": """
 #include "common/func.sql"
 
-select $var1 from $var2 where ${var3};
-$f1(*, `test2`);
+select $var1 from $var2 where $var3;
+$f1(MAX(*), `test2`);
 $f2(*, as23!@#%4);
 $f3("a", "b c");
 """,
@@ -51,7 +51,7 @@ $f3("a", "b c");
 
 _EXPECTED = """\
 select "var1" from 'var2' where `var3`;
-select * from `test2`;
+select MAX(*) from `test2`;
 select as23!@#%4 from *; select * from as23!@#%4;
 CALL p("a", "b c");\
 """
@@ -82,7 +82,7 @@ class TestCompiler(TestCase):
 
     def test_expand_variable(self):
         self.trans.variables["var1"] = "`12%&89qa@`"
-        self.trans.parse(StringIO('select $var1; select ${var1};'))
+        self.trans.parse(StringIO('select $var1; select $var1;'))
         self.output.seek(0)
         self.assertEqual("select `12%&89qa@`; select `12%&89qa@`;\n", self.output.read())
 
@@ -167,4 +167,3 @@ class TestCompiler(TestCase):
         args = translator.parse_arguments(["test.sql"])
         self.assertEqual("test.sql", args.input[0])
         self.assertIsNone(args.output)
-

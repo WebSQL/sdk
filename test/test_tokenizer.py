@@ -16,7 +16,7 @@ SOFTWARE.
 __author__ = "@bg"
 
 from unittest import TestCase
-from wsql_sdk import _interpreter
+from wsql_sdk import grammar
 
 
 _TEST_PROCEDURE1 = """
@@ -137,7 +137,7 @@ class TestTokenizer(TestCase):
     Test the procedure analyzer of interpreter
     """
     def setUp(self):
-        self.tokenizer = _interpreter.SQLTokenizer()
+        self.tokenizer = grammar.SQLTokenizer()
 
     def test_scan_select(self):
         """ test scan select statement in procedures """
@@ -188,7 +188,7 @@ class TestTokenizer(TestCase):
         errors = self.tokenizer.errors(self.tokenizer._procedures["__test_procedure3"])
         self.assertEqual({"TestError2"}, errors)
 
-    def test_parse_meta(self):
+    def test_parse_return_hints(self):
         """ test parse meta """
         self.tokenizer.parse(_TEST_PROCEDURE1)
         returns = self.tokenizer._procedures["test_procedure1"].returns

@@ -30,7 +30,7 @@ class Dummy:
     pass
 
 
-class TestGenerator(TestCase):
+class TestCodeGen(TestCase):
     def test_validate(self):
         """ test validate the procedures """
         proc = Dummy()
@@ -49,18 +49,18 @@ class TestGenerator(TestCase):
 
     def test_parse_cmdline(self):
         """ test parse commandline arguments """
-        args = codegen.parse_arguments(["-o", "build", "-s", "pyaio", "test.sql"])
+        args = codegen.parse_arguments(["-o", "build", "-l", "python3_aio", "test.sql"])
         self.assertEqual("test.sql", args.input)
         self.assertEqual("build", args.outdir)
-        self.assertEqual("pyaio", args.syntax)
+        self.assertEqual("python3_aio", args.language)
 
     def test_syntax(self):
         """ test generate result with different templates """
         for data in TEST_DATA:
-            for syntax in ("pyaio", "pynative"):
+            for lang in ("python3_aio", "python3"):
                 args = Dummy()
                 args.input = BytesIO(data["sql"])
-                args.syntax = syntax
+                args.language = lang
                 args.outdir = ""
 
                 opened_files = dict()
@@ -79,7 +79,7 @@ class TestGenerator(TestCase):
 
                 code = opened_files[filename]
                 code.seek(0)
-                self.assertIn(data[syntax], code.read())
+                self.assertIn(data[lang], code.read())
                 exceptions = opened_files["exceptions.py"]
                 exceptions.seek(0)
                 self.assertIn(data["exceptions"], exceptions.read())

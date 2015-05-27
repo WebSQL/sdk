@@ -44,7 +44,7 @@ from wsql import UserError
 class TestError(UserError):
     pass
 """,
-        "pyaio": '''
+        "python3_aio": '''
 from asyncio import coroutine
 from wsql import Error, handle_error
 from wsql.cluster import transaction
@@ -83,7 +83,7 @@ def test_procedure1(connection, args=None):
         raise handle_error(exceptions, e)
 ''',
 
-        "pynative": '''
+        "python3": '''
 from wsql import Error, handle_error
 from wsql.cluster import transaction
 from . import exceptions
@@ -127,7 +127,7 @@ END$$
         "exceptions": """
 from wsql import UserError
 """,
-        "pyaio": '''
+        "python3_aio": '''
 @coroutine
 def test_procedure2(connection, c1=None, c2=None):
     """
@@ -147,7 +147,7 @@ def test_procedure2(connection, c1=None, c2=None):
             yield from __cursor.close()
 ''',
 
-        "pynative": '''
+        "python3": '''
 def test_procedure2(connection, c1=None, c2=None):
     """
     test the procedure2
@@ -172,7 +172,7 @@ END$$
         "exceptions": """
 from wsql import UserError
 """,
-        "pyaio": '''
+        "python3_aio": '''
 @coroutine
 def procedure3(connection):
     """
@@ -189,7 +189,7 @@ def procedure3(connection):
             yield from __cursor.close()
 ''',
 
-        "pynative": '''
+        "python3": '''
 def procedure3(connection):
     """
     procedure3
@@ -213,7 +213,7 @@ END$$
         "exceptions": """
 from wsql import UserError
 """,
-        "pyaio": '''
+        "python3_aio": '''
 @coroutine
 def update(connection, i=None):
     """
@@ -235,7 +235,7 @@ def update(connection, i=None):
             yield from __cursor.close()
 ''',
 
-        "pynative": '''
+        "python3": '''
 def update(connection, i=None):
     """
     update the table1
@@ -264,7 +264,7 @@ END$$
         "exceptions": """
 from wsql import UserError
 """,
-        "pyaio": '''
+        "python3_aio": '''
 @coroutine
 def query(connection, i=None):
     """
@@ -285,7 +285,7 @@ def query(connection, i=None):
             yield from __cursor.close()
 ''',
 
-        "pynative": '''
+        "python3": '''
 def query(connection, i=None):
     """
     query the table1

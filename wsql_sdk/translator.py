@@ -18,7 +18,7 @@ __author__ = "@bg"
 import fnmatch
 import os
 import warnings
-from ._interpreter import MacrosTokenizer
+from .grammar import MacrosTokenizer
 
 
 class Translator(MacrosTokenizer):

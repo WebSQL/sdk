@@ -24,7 +24,7 @@ from datetime import datetime
 from functools import reduce
 from importlib import machinery
 from textwrap import TextWrapper
-from ._interpreter import SQLTokenizer
+from .grammar import SQLTokenizer
 
 _THIS_DIR = os.path.dirname(__file__)
 
@@ -230,11 +230,16 @@ class Builder:
         self.write("", eol="\n" * self.syntax.break_lines)
         self.write(self.syntax.exception_class(exception))
 
+_LANGUAGES_FOLDER = "_lang"
 
 def create_builder(name):
     """load builder by syntax"""
-    loader = machinery.SourceFileLoader("syntax." + name, os.path.join(_THIS_DIR, 'syntax', name + ".py"))
+    loader = machinery.SourceFileLoader(".".join((_LANGUAGES_FOLDER, name)), os.path.join(_THIS_DIR, _LANGUAGES_FOLDER, name + ".py"))
     return Builder(loader.load_module())
+
+
+def get_languages():
+    return [x.partition('.')[0] for x in os.listdir(os.path.join(_THIS_DIR, _LANGUAGES_FOLDER)) if not x.startswith('_')]
 
 
 def load_input(source):
@@ -252,12 +257,12 @@ def load_input(source):
 def parse_arguments(argv=None):
     from argparse import ArgumentParser
 
-    available_syntax = [x.partition('.')[0] for x in os.listdir(os.path.join(_THIS_DIR, 'syntax')) if not x.startswith('_')]
+    available_language = get_languages()
 
     parser = ArgumentParser()
     parser.add_argument('input', nargs='?', help='source file, by default input stream', default=sys.stdin)
     parser.add_argument('-o', '--outdir', help='output dir', default=os.curdir)
-    parser.add_argument('-s', '--syntax', help='the syntax', choices=available_syntax, required=True)
+    parser.add_argument('-l', '--language', help='the language', choices=available_language, required=True)
     return parser.parse_args(argv)
 
 
@@ -267,7 +272,7 @@ def process(args):
     tokenizer = SQLTokenizer()
     tokenizer.parse(load_input(args.input))
 
-    builder = create_builder(args.syntax)
+    builder = create_builder(args.language)
 
     modules = {}
     for p in tokenizer.procedures():
