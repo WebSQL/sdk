@@ -65,7 +65,7 @@ def _listdir_mock(dirname):
     return [x.rpartition('/')[-1] for x in _TEST_FILES if x.startswith(dirname)]
 
 
-class TestCompiler(TestCase):
+class TestTranslator(TestCase):
     def setUp(self):
         self.output = StringIO()
         self.trans = translator.Translator(self.output)
@@ -161,9 +161,17 @@ class TestCompiler(TestCase):
 
     def test_arguments_parse(self):
         """ test cmdline arguments parsing """
-        args = translator.parse_arguments(["test.sql", "test_o.sql"])
+        args = translator.parse_arguments(["test.sql", "test_o.sql", "-d", "k:v", "-d", "k1:v1 v2"])
         self.assertEqual("test.sql", args.input[0])
         self.assertEqual("test_o.sql", args.output)
+        self.assertEqual(["k:v", "k1:v1 v2"], args.defines)
         args = translator.parse_arguments(["test.sql"])
         self.assertEqual("test.sql", args.input[0])
         self.assertIsNone(args.output)
+
+    def test_global_defines(self):
+        """test external defines"""
+        self.trans.variables["DB_NAME"] = "test"
+        self.trans.parse(StringIO("use `$DB_NAME`;"))
+        self.output.seek(0)
+        self.assertEqual("use `test`;\n", self.output.read())

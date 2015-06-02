@@ -74,6 +74,7 @@ def parse_arguments(argv=None):
     parser = ArgumentParser()
     parser.add_argument('input', nargs=1, help='input file')
     parser.add_argument('output', nargs='?', help='output file')
+    parser.add_argument('-d', '--define', dest='defines', action='append', help='custom defines')
     return parser.parse_args(argv)
 
 
@@ -84,6 +85,9 @@ def main(argv=None):  # pragma: no cover
     else:
         import sys
         builder = Translator(sys.stdout)
+
+    for d, v in map(lambda x: x.split(':', 1), args.defines):
+        builder.variables[d] = v
 
     builder.compile(args.input[0])
 

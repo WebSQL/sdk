@@ -185,7 +185,11 @@ class MacrosTokenizer:
     def _handle_expand_var(self, _, token):
         """handle expand macro variable"""
         if not self.suppress:
-            self.on_variable(token.name, self.variables[token.name])
+            if token.name in self.variables:
+                self.on_variable(token.name, self.variables[token.name])
+            else:
+                warnings.warn("Undefined variable: %s" % token.name)
+                self.on_variable(token.name, "$" + token.name)
 
     def _handle_include(self, _, token):
         """include file"""
