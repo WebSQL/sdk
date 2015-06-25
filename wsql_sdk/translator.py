@@ -74,7 +74,7 @@ def parse_arguments(argv=None):
     parser = ArgumentParser()
     parser.add_argument('input', nargs=1, help='input file')
     parser.add_argument('output', nargs='?', help='output file')
-    parser.add_argument('-d', '--define', dest='defines', action='append', help='custom defines')
+    parser.add_argument('-d', '--define', dest='defines', action='append', help='custom defines', default=list())
     return parser.parse_args(argv)
 
 
