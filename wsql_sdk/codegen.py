@@ -285,7 +285,7 @@ def process(args):
             continue
 
         builder.validate(p)
-        procedure = Procedure(module, name, p, tokenizer.is_read_only(p), tokenizer.errors(p))
+        procedure = Procedure(module, name, p, tokenizer.is_read_only(p), sorted(tokenizer.errors(p)))
         modules.setdefault(procedure.module or "__init__", []).append(procedure)
 
     count = 0
@@ -296,7 +296,7 @@ def process(args):
                 count += 1
 
     with builder.create_exceptions_output(args.outdir):
-        for e in tokenizer.errors():
+        for e in sorted(tokenizer.errors()):
             builder.write_exception(e)
     return count
 
