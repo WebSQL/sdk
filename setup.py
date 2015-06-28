@@ -18,13 +18,13 @@ except ImportError:
 
 
 def readme():
-    with open('README') as r:
+    with open('README.rst') as r:
         return r.read()
 
 
 setup(
     name="wsql_sdk",
-    version="0.2.1",
+    version="0.2.2",
     description='The chain of tools, that to make work with SQL easier',
     packages=["wsql_sdk", "wsql_sdk._lang"],
     requires=["pyparsing"],

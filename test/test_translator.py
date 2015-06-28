@@ -94,6 +94,23 @@ class TestTranslator(TestCase):
         self.assertEqual(14, macros.ast[0][1])
         self.assertEqual(16, macros.ast[0][2])
 
+    def test_undefine_function(self):
+        self.trans.parse(StringIO('#define f1(a) select * from $a\n$f1(b);\n#undef f1'))
+        self.output.seek(0)
+        self.assertEqual("\nselect * from b;\n\n", self.output.read())
+        self.assertNotIn('f1', self.trans.functions)
+
+    def test_undefine_variable(self):
+        self.trans.parse(StringIO('#define v 1\nselect $v from a;\n#undef v'))
+        self.output.seek(0)
+        self.assertEqual("\nselect 1 from a;\n\n", self.output.read())
+        self.assertNotIn('v', self.trans.variables)
+        self.trans.reset()
+        with catch_warnings(record=True) as log:
+            self.trans.parse(StringIO("#undef v\n"))
+            self.assertEqual(1, len(log))
+            self.assertIn("0: macros v is not defined!", str(log[0]))
+
     def test_expand_macros(self):
         self.trans.parse(StringIO('#DEFINE f1(a) select * \\ \nfrom $a\n$f1(`table1`);'))
         self.output.seek(0)

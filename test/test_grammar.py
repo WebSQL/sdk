@@ -63,19 +63,23 @@ class TestInterpreter(TestCase):
                           grammar._SELECT_COLUMN_LIST.parseString(
                               "(SELECT COUNT(*) FROM A) AS `count`, MAX(*) AS `max`, id").columns])
 
-    def test_declare_var(self):
+    def test_define_variable(self):
         self.assertEqual(['define', 'test', '"test"'],
-                         grammar._DECLARE_VAR.parseString("#define test \"test\"").asList())
+                         grammar._DEFINE_VAR.parseString("#define test \"test\"").asList())
 
         self.assertEqual(['define', 'test', "f(w,x)"],
-                         grammar._DECLARE_VAR.parseString("#define test f(w,x)").asList())
+                         grammar._DEFINE_VAR.parseString("#define test f(w,x)").asList())
 
         self.assertEqual(['define', 'test', '"test1 test2"'],
-                         grammar._DECLARE_VAR.parseString("#define test \"test1 test2\"").asList())
+                         grammar._DEFINE_VAR.parseString("#define test \"test1 test2\"").asList())
 
-    def test_declare_function(self):
+    def test_define_function(self):
         self.assertEqual(['define', 'test', ['a1', 'a2', 'a3'], 'f($a1, $a2, $a3)'],
-                         grammar._DECLARE_FUNCTION.parseString("#define test(a1,a2,a3) f($a1, $a2, $a3)").asList())
+                         grammar._DEFINE_FUNCTION.parseString("#define test(a1,a2,a3) f($a1, $a2, $a3)").asList())
+
+    def test_undefine(self):
+        self.assertEqual(['undef', 'test'],
+                         grammar._UNDEFINE.parseString("#undef test").asList())
 
     def test_expand_var(self):
         self.assertEqual("test",

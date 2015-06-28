@@ -35,10 +35,11 @@ def _sql_comment(expr):
 
 # keywords
 _DEFINE = _macros(CaselessKeyword("define"))
+_UNDEF = _macros(CaselessKeyword("undef"))
 _INCLUDE = _macros(CaselessKeyword("include"))
-_IF = _macros(CaselessKeyword("IF"))
-_ELSE = _macros(CaselessKeyword("ELSE"))
-_ENDIF = _macros(CaselessKeyword("ENDIF"))
+_IF = _macros(CaselessKeyword("if"))
+_ELSE = _macros(CaselessKeyword("else"))
+_ENDIF = _macros(CaselessKeyword("endif"))
 
 _AS = CaselessKeyword("AS")
 _CALL = CaselessKeyword("CALL")
@@ -85,10 +86,11 @@ _SQL_ARGS = delimitedList(Group(_SQL_ARG), combine=False)
 _RETURN_TYPE = oneOf("object array", caseless=True).setResultsName("type")
 
 # expressions
-_DECLARE_FUNCTION = _DEFINE + _ID + nestedExpr(content=_ID_LIST, ignoreExpr=None).setResultsName("args") + \
+_DEFINE_FUNCTION = _DEFINE + _ID + nestedExpr(content=_ID_LIST, ignoreExpr=None).setResultsName("args") + \
     Regex(".+$").setResultsName("body")
 
-_DECLARE_VAR = _DEFINE + _ID + _VALUE
+_DEFINE_VAR = _DEFINE + _ID + _VALUE
+_UNDEFINE = _UNDEF + _ID
 _INCLUDE_FILE = _INCLUDE + quotedString.setResultsName("filename")
 _EXPAND_VAR = Suppress('$') + _ID
 _EXPAND_FUNC = Suppress('$') + _ID + nestedExpr(content=_VALUE_LIST, ignoreExpr=None).setResultsName("args")
@@ -126,8 +128,9 @@ class MacrosTokenizer:
 
     grammar = \
         _INCLUDE_FILE.setResultsName('include') | \
-        _DECLARE_FUNCTION.setResultsName('declare_function') | \
-        _DECLARE_VAR.setResultsName('declare_var') | \
+        _DEFINE_FUNCTION.setResultsName('define') | \
+        _DEFINE_VAR.setResultsName('define') | \
+        _UNDEFINE.setResultsName('undefine') | \
         _EXPAND_FUNC.setResultsName("expand_function") | \
         _EXPAND_VAR.setResultsName('expand_var') | \
         _IF_EXPR.setResultsName('if') | \
@@ -149,26 +152,34 @@ class MacrosTokenizer:
         self.functions.clear()
         self.variables.clear()
 
-    def _handle_declare_function(self, line, token):
+    def _handle_define(self, line, token):
         """define macro function"""
         if self.suppress:
             return
 
-        args = token.args[0]
-        keywords = MatchFirst([Keyword('$' + x).setResultsName(x) for x in args])
-        macros = self.function_class(args, token.body, list(keywords.scanString(token.body)))
-        if token.name in self.functions:
-            warnings.warn('%d: macros %s already defined!' % (line, token.name))
-        self.functions[token.name] = macros
+        if token.args:
+            args = token.args[0]
+            keywords = MatchFirst([Keyword('$' + x).setResultsName(x) for x in args])
+            macros = self.function_class(args, token.body, list(keywords.scanString(token.body)))
+            if token.name in self.functions:
+                warnings.warn('%d: macros %s already defined!' % (line, token.name))
+            self.functions[token.name] = macros
+        else:
+            if token.name in self.variables:
+                warnings.warn('%d: macros %s already defined!' % (line, token.name))
+            self.variables[token.name] = token.value
 
-    def _handle_declare_var(self, line, token):
-        """define macro variable"""
+    def _handle_undefine(self, line, token):
+        """undefine the function or variable"""
         if self.suppress:
             return
 
         if token.name in self.variables:
-            warnings.warn('%d: macros %s already defined!' % (line, token.name))
-        self.variables[token.name] = token.value
+            del self.variables[token.name]
+        elif token.name in self.functions:
+            del self.functions[token.name]
+        else:
+            warnings.warn('%d: macros %s is not defined!' % (line, token.name))
 
     def _handle_expand_function(self, line, token):
         """handle expand macro function"""

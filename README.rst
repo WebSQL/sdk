@@ -62,12 +62,13 @@ Syntax
 *#include "<filename>"* - include the specified filename, the absolute and relative urls supported.
 *#define name <value>*  - specify the value, that can be used as *$name*
 *#define name(arg1, ..., argN)* - the function, that can be used as *$name(a1,...aN)*
+*#undef name* - undefine previously defined instruction*
 *#if condition expression else alternative* - conditional expressions
 
 *SELECT ... ; -- > array* - hint, that query returns more that one element
 *SELECT ... ; -- > object* - hint, that query returns exactly one element
 *COMMENT "returns union"* - hint, that merge all objects from results sets to one
-*COMMENT "<table name> (<colum name column type>,...);"* - hint, that allow to the list to procedure by using temporary table
+*COMMENT "<table name> (<colum name column type>,...);"* - hint, that allow to pass the list to procedure via temporary table
 
 SQL
 ***

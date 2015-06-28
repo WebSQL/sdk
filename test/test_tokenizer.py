@@ -105,7 +105,7 @@ END$$
 """
 
 _TEST_PROCEDURE5 = """
-CREATE PROCEDURE `test_procedure4` () COMMENT "returns union"
+CREATE PROCEDURE `test_procedure5` () COMMENT "returns union"
 BEGIN
     SELECT a FROM b; -- > object
     SELECT a FROM b; -- > name:object
@@ -218,4 +218,4 @@ class TestTokenizer(TestCase):
     def test_parse_return_mod(self):
         """ test parse return different """
         self.tokenizer.parse(_TEST_PROCEDURE5)
-        self.assertEqual("union", self.tokenizer._procedures["test_procedure4"].return_mod)
+        self.assertEqual("union", self.tokenizer._procedures["test_procedure5"].return_mod)
