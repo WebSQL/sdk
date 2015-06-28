@@ -8,12 +8,24 @@ WSQL-SDK
 
 The chain of tools that make work with SQL procedures easier.
 
+Syntax
+******
+* *#include "<filename>"* - include the specified filename, the absolute and relative urls supported.
+* *#define name <value>*  - specify the value, that can be used as *$name*
+* *#define name(arg1, ..., argN)* - the function, that can be used as *$name(a1,...aN)*
+* *#undef name* - undefine previously defined instruction
+* *#if condition expression else alternative* - conditional expressions
+* *SELECT ... ; -- > array* - hint, that informs about query returns more that one element
+* *SELECT ... ; -- > object* - hint, that informs about query returns exactly one element
+* *COMMENT "returns union"* - hint, to merge all objects from results sets to one
+* *COMMENT "<table name> (<colum name column type>,...);"* - hint, that allow to pass the list of arguments to procedure via temporary table
+
 wsql-trans:
---------------
+-----------
 The extensions above native SQL.
 
 supports:
-*********
+#########
 
 * macros
 
@@ -56,22 +68,16 @@ Now supports python3 native and aio.
 The C++ under development.
 Required `WSQL`_.
 
-Syntax
-******
+Hints
+#####
+* *SELECT ... ; -- > array* - hint, that informs about query returns more that one element
+* *SELECT ... ; -- > object* - hint, that informs about query returns exactly one element
+* *COMMENT "returns union"* - hint, to merge all objects from results sets to one
+* *COMMENT "<table name> (<colum name column type>,...);"* - hint, that allow to pass the list of arguments to procedure via temporary table
 
-*#include "<filename>"* - include the specified filename, the absolute and relative urls supported.
-*#define name <value>*  - specify the value, that can be used as *$name*
-*#define name(arg1, ..., argN)* - the function, that can be used as *$name(a1,...aN)*
-*#undef name* - undefine previously defined instruction*
-*#if condition expression else alternative* - conditional expressions
-
-*SELECT ... ; -- > array* - hint, that query returns more that one element
-*SELECT ... ; -- > object* - hint, that query returns exactly one element
-*COMMENT "returns union"* - hint, that merge all objects from results sets to one
-*COMMENT "<table name> (<colum name column type>,...);"* - hint, that allow to pass the list to procedure via temporary table
 
 SQL
-***
+###
 .. code-block:: sql
 
     CREATE PROCEDURE table1.insert (value VARCHAR(10))
@@ -81,7 +87,7 @@ SQL
     END
 
 Python3
-*******
+#######
 
 .. code-block:: python
 
