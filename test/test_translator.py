@@ -164,8 +164,10 @@ class TestTranslator(TestCase):
         """ test recursive includes"""
         with mock.patch('builtins.open', lambda f, *args, **kwargs: _open_mock(f)):
             with mock.patch('os.listdir', _listdir_mock):
-                self.assertRaisesRegex(RuntimeError, "Recursion detected: ./recursive.sql",
-                                       self.trans.compile, "recursive.sql")
+                with catch_warnings(record=True) as log:
+                    self.trans.compile("recursive.sql")
+                    self.assertEqual(2, len(log))
+                    self.assertIn("Already included: ./recursive.sql", str(log[0]))
 
     def test_no_inclusion_warning(self):
         """ test warning if there is no include files found"""
@@ -174,7 +176,7 @@ class TestTranslator(TestCase):
                 self.trans.compile("recursive.sql")
 
             self.assertEqual(1, len(log))
-            self.assertIn("There is no include files: ./recursive.sql", str(log[0]))
+            self.assertIn("Not included: ./recursive.sql", str(log[0]))
 
     def test_arguments_parse(self):
         """ test cmdline arguments parsing """

@@ -48,20 +48,21 @@ class Translator(MacrosTokenizer):
         for fname in fnmatch.filter(os.listdir(dirname), os.path.basename(filename)):
             self.include_file(os.path.join(dirname, fname))
         if before == len(self.includes):
-            warnings.warn("There is no include files: %s" % filename)
+            warnings.warn("Not included: %s" % filename)
 
     def nop(self, text):
         self.output.write(text)
 
     def include_file(self, filename):
         if filename in self.includes:
-            raise RuntimeError('Recursion detected: %s' % filename)
-        self.includes.add(filename)
-        with open(filename, 'r') as stream:
-            workdir = self.workdir
-            self.workdir = os.path.dirname(filename)
-            self.parse(stream)
-            self.workdir = workdir
+            warnings.warn("Already included: %s" % filename)
+        else:
+            self.includes.add(filename)
+            with open(filename, 'r') as stream:
+                workdir = self.workdir
+                self.workdir = os.path.dirname(filename)
+                self.parse(stream)
+                self.workdir = workdir
 
     def compile(self, filename):
         self.include_file(os.path.join(self.workdir, filename))
