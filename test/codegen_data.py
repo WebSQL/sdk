@@ -69,7 +69,7 @@ def test_procedure1(connection, args=None):
             __args = ((x.get(y, None) for y in ("c1", "c2")) for x in args)
             yield from __cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `args`;")
             yield from __cursor.execute(b"CREATE TEMPORARY TABLE `args`(`c1` INT, `c2` BINARY(255)) ENGINE=MEMORY;")
-            yield from __cursor.execute_many(b"INSERT INTO `args` (`c1`, `c2`) VALUES (%s, %s);", __args)
+            yield from __cursor.executemany(b"INSERT INTO `args` (`c1`, `c2`) VALUES (%s, %s);", __args)
             yield from __cursor.callproc(b"test_procedure1", ())
             __result = (yield from __cursor.fetchxall())[0]
             __result.update((yield from __cursor.fetchxall())[0])
@@ -104,7 +104,7 @@ def test_procedure1(connection, args=None):
             __args = ((x.get(y, None) for y in ("c1", "c2")) for x in args)
             __cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `args`;")
             __cursor.execute(b"CREATE TEMPORARY TABLE `args`(`c1` INT, `c2` BINARY(255)) ENGINE=MEMORY;")
-            __cursor.execute_many(b"INSERT INTO `args` (`c1`, `c2`) VALUES (%s, %s);", __args)
+            __cursor.executemany(b"INSERT INTO `args` (`c1`, `c2`) VALUES (%s, %s);", __args)
             __cursor.callproc(b"test_procedure1", ())
             __result = __cursor.fetchxall()[0]
             __result.update(__cursor.fetchxall()[0])

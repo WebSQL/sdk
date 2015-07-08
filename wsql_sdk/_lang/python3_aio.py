@@ -47,7 +47,7 @@ def temporary_table(name, columns):
             __args = ((x.get(y, None) for y in ({1})) for x in {0})
             yield from __cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `{0}`;")
             yield from __cursor.execute(b"CREATE TEMPORARY TABLE `{0}`({2}) ENGINE=MEMORY;")
-            yield from __cursor.execute_many(b"INSERT INTO `{0}` ({3}) VALUES ({4});", __args)"""\
+            yield from __cursor.executemany(b"INSERT INTO `{0}` ({3}) VALUES ({4});", __args)"""\
         .format(name, column_names, columns_def, column_names_sql, place_holders)
 
 
