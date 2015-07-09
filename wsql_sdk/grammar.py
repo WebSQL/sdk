@@ -18,7 +18,7 @@ from collections import namedtuple
 from functools import reduce
 from pyparsing import alphanums, CaselessKeyword, Combine, delimitedList, Group, Keyword, Literal, \
     lineEnd, lineStart, MatchFirst, nestedExpr, nums, oneOf, Optional, Regex, Suppress, Word, \
-    quotedString, SkipTo, Forward
+    quotedString, SkipTo, Forward, White
 import warnings
 
 
@@ -62,7 +62,7 @@ _SQL_EOL = Literal(";")
 _ID = Word(alphanums + "_.").setResultsName("name")
 _ID_LIST = delimitedList(_ID, combine=False)
 _VALUE = (Combine(_ID + Literal("(") + SkipTo(")", include=True)) |
-          Word(alphanums + "!#%&*+-./:<=>?@[\]^_~`") | quotedString).setResultsName("value")
+          Word(alphanums + "$!#%&*+-./:<=>?@[\]^_~`") | quotedString).setResultsName("value")
 _VALUE_LIST = delimitedList(_VALUE, combine=False)
 
 _SQL_DIRECTION = oneOf('INOUT IN OUT', caseless=True)
@@ -87,7 +87,7 @@ _RETURN_TYPE = oneOf("object array", caseless=True).setResultsName("type")
 
 # expressions
 _DEFINE_FUNCTION = _DEFINE + _ID + nestedExpr(content=_ID_LIST, ignoreExpr=None).setResultsName("args") + \
-    Regex(".+$").setResultsName("body")
+     Suppress(White()) + Regex(".+$").setResultsName("body")
 
 _DEFINE_VAR = _DEFINE + _ID + _VALUE
 _UNDEFINE = _UNDEF + _ID
@@ -126,16 +126,19 @@ _CALL_EXPR = _CALL + _SQL_ID.setResultsName("name") + _SKIP_TO_END
 class MacrosTokenizer:
     """Preprocessor statements tokenizer"""
 
+    _expand = \
+        _EXPAND_FUNC.setResultsName("expand_function") | \
+        _EXPAND_VAR.setResultsName('expand_var')
+
     grammar = \
         _INCLUDE_FILE.setResultsName('include') | \
         _DEFINE_FUNCTION.setResultsName('define') | \
         _DEFINE_VAR.setResultsName('define') | \
         _UNDEFINE.setResultsName('undefine') | \
-        _EXPAND_FUNC.setResultsName("expand_function") | \
-        _EXPAND_VAR.setResultsName('expand_var') | \
         _IF_EXPR.setResultsName('if') | \
         _ELSE_EXPR.setResultsName('else') | \
-        _ENDIF_EXPR.setResultsName('endif')
+        _ENDIF_EXPR.setResultsName('endif') | \
+        _expand
 
     function_class = namedtuple('Function', ('args', 'body', 'ast'))
 
@@ -152,6 +155,40 @@ class MacrosTokenizer:
         self.functions.clear()
         self.variables.clear()
 
+    def _expand_var(self, target):
+        """expand the macros"""
+        name = target.name
+        if name in self.variables:
+            return self.variables[name]
+        return '$' + name
+
+    def _expand_function(self, target):
+        """expand the macro function"""
+        macros = self.functions[target.name]
+
+        args = (x.startswith('$') and self.variables.get(x[1:], x) or x for x in target.args[0])
+        args = dict(zip(macros.args, args))
+        if len(args) != len(macros.args):
+            raise ValueError("invalid number of parameters for %s, expected %s" % (target.name, macros.args))
+
+        start = 0
+        buffer = ''
+        for t in macros.ast:
+            buffer += macros.body[start:t[1]]
+            buffer += args[t[0].getName()]
+            start = t[2]
+        return buffer + macros.body[start:]
+
+    def _recurisve_expand(self, value):
+        """recursive expand macros"""
+        buffer = ''
+        start = 0
+        for t in self._expand.scanString(value):
+            buffer += value[start:t[1]]
+            buffer += getattr(self, '_' + t[0].getName())(t[0])
+            start = t[2]
+        return buffer + value[start:]
+
     def _handle_define(self, line, token):
         """define macro function"""
         if self.suppress:
@@ -160,14 +197,15 @@ class MacrosTokenizer:
         if token.args:
             args = token.args[0]
             keywords = MatchFirst([Keyword('$' + x).setResultsName(x) for x in args])
-            macros = self.function_class(args, token.body, list(keywords.scanString(token.body)))
+            body = self._recurisve_expand(token.body)
+            macros = self.function_class(args, body, list(keywords.scanString(body)))
             if token.name in self.functions:
                 warnings.warn('%d: macros %s already defined!' % (line, token.name))
             self.functions[token.name] = macros
         else:
             if token.name in self.variables:
                 warnings.warn('%d: macros %s already defined!' % (line, token.name))
-            self.variables[token.name] = token.value
+            self.variables[token.name] = self._recurisve_expand(token.value)
 
     def _handle_undefine(self, line, token):
         """undefine the function or variable"""
@@ -191,6 +229,7 @@ class MacrosTokenizer:
         args = dict(zip(macros.args, token.args[0]))
         if len(args) != len(macros.args):
             raise ValueError("%d: invalid number of parameters for %s, expected %s" % (line, token.name, macros.args))
+
         self.on_function(macros.ast, macros.body, args)
 
     def _handle_expand_var(self, _, token):

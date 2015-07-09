@@ -194,3 +194,16 @@ class TestTranslator(TestCase):
         self.trans.parse(StringIO("use `$DB_NAME`;"))
         self.output.seek(0)
         self.assertEqual("use `test`;\n", self.output.read())
+
+    def test_recursive_expand_macros(self):
+        """test recursive expand macros"""
+        self.trans.parse(StringIO(
+            """\
+#define G a
+#define K $G
+#define f1(t, g) $t WHERE $g
+#define f2(v, t) SELECT $v FROM $f1($t, $K)
+$f2(1, t);"""
+        ))
+        self.output.seek(0)
+        self.assertEqual("SELECT 1 FROM t WHERE a;", self.output.read().strip())
