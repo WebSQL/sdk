@@ -95,7 +95,7 @@ _RETURN_TYPE = oneOf("object array", caseless=True).setResultsName("type")
 
 # expressions
 _DEFINE_FUNCTION = _DEFINE + _ID + nestedExpr(content=_ID_LIST, ignoreExpr=None).setResultsName("args") + \
-     Suppress(White()) + Regex(".+$").setResultsName("body")
+    Suppress(White()) + Regex(".+$").setResultsName("body")
 
 _DEFINE_VAR = _DEFINE + _ID + _VALUE
 _UNDEFINE = _UNDEF + _ID
