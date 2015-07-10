@@ -106,7 +106,7 @@ def exception_class(name):
 
 def declare_constant(name, value):
     """declare constant"""
-    return "{0} = {1}".format(name, value)
+    return "{0} = {1}".format(name.upper(), value)
 
 
 def include_for_structures(kinds):

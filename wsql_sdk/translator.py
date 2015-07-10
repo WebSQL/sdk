@@ -29,19 +29,27 @@ class Translator(MacrosTokenizer):
         self.includes = set()
         self.workdir = os.curdir
 
+    def write(self, raw):
+        line = raw.strip('\n')
+        if line:
+            self.output.write(line)
+            if raw.endswith('\n'):
+                self.output.write('\n')
+
     def on_function(self, ast, body, args):
         start = 0
         for t in ast:
-            self.output.write(body[start:t[1]])
-            self.output.write(args[t[0].getName()])
+            self.write(body[start:t[1]])
+            self.write(args[t[0].getName()])
             start = t[2]
 
-        self.output.write(body[start:])
+        self.write(body[start:])
+
+    def on_constant(self, name, value):
+        self.write('-- CONSTANT {0} {1}\n'.format(name, value))
 
     def on_variable(self, name, value):
-        self.output.write(value)
-        if name.startswith('_'):
-            self.output.write('-- CONSTANT %s %s\n', name, value)
+        self.write(value)
 
     def on_include(self, filename):
         filename = os.path.join(self.workdir, filename)
@@ -53,7 +61,7 @@ class Translator(MacrosTokenizer):
             warnings.warn("Not included: %s" % filename)
 
     def nop(self, text):
-        self.output.write(text)
+        self.write(text)
 
     def include_file(self, filename):
         if filename in self.includes:

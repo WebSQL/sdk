@@ -221,7 +221,10 @@ class MacrosTokenizer:
         else:
             if token.name in self.variables:
                 warnings.warn('%d: macros %s already defined!' % (line, token.name))
-            self.variables[token.name] = self._recurisve_expand(token.value)
+
+            value = self.variables[token.name] = self._recurisve_expand(token.value)
+            if not token.name.startswith("_"):
+                self.on_constant(token.name, value)
 
     def _handle_undefine(self, line, token):
         """undefine the function or variable"""
@@ -278,6 +281,10 @@ class MacrosTokenizer:
             self.suppress = self.conditions_stack.pop()
         except IndexError:
             raise ValueError("%d: mismatch if/endif" % line) from None
+
+    def on_constant(self, name, value):
+        """callback to catch constants"""
+        pass
 
     def on_function(self, ast, body, args):
         """callback to catch function"""

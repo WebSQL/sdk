@@ -25,7 +25,7 @@ _TEST_FILES = {
     "./main.sql": """
 #include "common/func.sql"
 
-select $var1 from $var2 where $var3;
+select $_var1 from $_var2 where $_var3;
 $f1(MAX(*), `test2`);
 $f2(*, as23!@#%4);
 $f3("a", "b c");
@@ -38,10 +38,10 @@ $f3("a", "b c");
 #define f3(a, b) CALL p($a, $b)
 """,
     "./common/vars.sql": """
-#define var1 "var1"
-#define var2 'var2'
-#define var3 `var3`
-#define var4 1
+#define _var1 "var1"
+#define _var2 'var2'
+#define _var3 `var3`
+#define _var4 1
 """,
     "./recursive.sql": """
 #include "recursive.sql"
@@ -97,14 +97,14 @@ class TestTranslator(TestCase):
     def test_undefine_function(self):
         self.trans.parse(StringIO('#define f1(a) select * from $a\n$f1(b);\n#undef f1'))
         self.output.seek(0)
-        self.assertEqual("\nselect * from b;\n\n", self.output.read())
+        self.assertEqual("select * from b;\n", self.output.read())
         self.assertNotIn('f1', self.trans.functions)
 
     def test_undefine_variable(self):
-        self.trans.parse(StringIO('#define v 1\nselect $v from a;\n#undef v'))
+        self.trans.parse(StringIO('#define _v 1\nselect $_v from a;\n#undef _v'))
         self.output.seek(0)
-        self.assertEqual("\nselect 1 from a;\n\n", self.output.read())
-        self.assertNotIn('v', self.trans.variables)
+        self.assertEqual("select 1 from a;\n", self.output.read())
+        self.assertNotIn('_v', self.trans.variables)
         self.trans.reset()
         with catch_warnings(record=True) as log:
             self.trans.parse(StringIO("#undef v\n"))
@@ -114,7 +114,7 @@ class TestTranslator(TestCase):
     def test_expand_macros(self):
         self.trans.parse(StringIO('#DEFINE f1(a) select * \\ \nfrom $a\n$f1(`table1`);'))
         self.output.seek(0)
-        self.assertEqual("\nselect * from `table1`;\n", self.output.read())
+        self.assertEqual("select * from `table1`;\n", self.output.read())
         self.trans.reset()
         self.assertRaises(ValueError, self.trans.parse, StringIO('#DEFINE f2(a,b) select * \\ \nfrom $a\n$f2(`table1`);'))
 
@@ -137,7 +137,7 @@ class TestTranslator(TestCase):
                                   "#endif"))
 
         self.output.seek(0)
-        self.assertEqual("\nselect 1 from t2;\n", self.output.read())
+        self.assertEqual("-- CONSTANT var4 1\nselect 1 from t2;\n", self.output.read())
 
         self.trans.reset()
         self.assertRaisesRegex(ValueError, "mismatch if/endif",
@@ -199,10 +199,10 @@ class TestTranslator(TestCase):
         """test recursive expand macros"""
         self.trans.parse(StringIO(
             """\
-#define G a
-#define K $G
+#define _G a
+#define _K $_G
 #define f1(t, g) $t WHERE $g
-#define f2(v, t) SELECT $v FROM $f1($t, $K)
+#define f2(v, t) SELECT $v FROM $f1($t, $_K)
 $f2(1, t);"""
         ))
         self.output.seek(0)
