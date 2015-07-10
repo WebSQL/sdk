@@ -17,8 +17,7 @@ __author__ = "@bg"
 
 file_header = """\
 # Auto-generated file by wsql-codegen(part of WSQL-SDK)
-# {timestamp}
-"""
+# {timestamp}"""
 
 includes_for_exceptions = """from wsql import UserError"""
 
@@ -106,7 +105,7 @@ def exception_class(name):
 
 def declare_constant(name, value):
     """declare constant"""
-    return "{0} = {1}".format(name.upper(), value)
+    return "\n{0} = {1}".format(name.upper(), value)
 
 
 def include_for_structures(kinds):

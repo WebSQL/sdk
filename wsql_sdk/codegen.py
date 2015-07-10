@@ -178,7 +178,7 @@ class Builder:
 
     def create_api_output(self, path, module, structures):
         """open new file to write procedures"""
-        self.stream = open(os.path.join(path, module + self.syntax.file_ext), "a")
+        self.stream = open(os.path.join(path, module + self.syntax.file_ext), "w")
         self.write(self.syntax.file_header.format(timestamp=datetime.now()))
         self.write(self.syntax.includes_for_api)
         if structures is not None:
@@ -243,7 +243,6 @@ class Builder:
 
     def write_constant(self, name, value):
         """write the constant"""
-        self.write("", eol="\n" * self.syntax.break_lines)
         self.write(self.syntax.declare_constant(name, value))
 
 _LANGUAGES_FOLDER = "_lang"
