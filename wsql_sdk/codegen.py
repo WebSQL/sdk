@@ -176,11 +176,17 @@ class Builder:
             self.stream.close()
             self.stream.close()
 
-    def create_api_output(self, path, module):
+    def create_api_output(self, path, module, structures):
         """open new file to write procedures"""
-        self.stream = open(os.path.join(path, module + self.syntax.file_ext), "w")
+        self.stream = open(os.path.join(path, module + self.syntax.file_ext), "a")
         self.write(self.syntax.file_header.format(timestamp=datetime.now()))
         self.write(self.syntax.includes_for_api)
+        if structures is not None:
+            self.write(self.syntax.include_for_structures(structures))
+            for kind in sorted(structures):
+                for v in structures[kind]:
+                    self.write("", eol="\n" * self.syntax.break_lines)
+                    self.write(self.syntax.declare_structure(kind, *v))
         return self
 
     def create_exceptions_output(self, path):
@@ -188,6 +194,11 @@ class Builder:
         self.stream = open(os.path.join(path, "exceptions" + self.syntax.file_ext), "w", encoding="utf8")
         self.write(self.syntax.file_header.format(timestamp=datetime.now()))
         self.write(self.syntax.includes_for_exceptions)
+        return self
+
+    def create_constants_output(self, path):
+        self.stream = open(os.path.join(path, "constants" + self.syntax.file_ext), "w", encoding="utf8")
+        self.write(self.syntax.file_header.format(timestamp=datetime.now()))
         return self
 
     @staticmethod
@@ -229,6 +240,11 @@ class Builder:
         """write the exception class"""
         self.write("", eol="\n" * self.syntax.break_lines)
         self.write(self.syntax.exception_class(exception))
+
+    def write_constant(self, name, value):
+        """write the constant"""
+        self.write("", eol="\n" * self.syntax.break_lines)
+        self.write(self.syntax.declare_constant(name, value))
 
 _LANGUAGES_FOLDER = "_lang"
 
@@ -290,14 +306,23 @@ def process(args):
 
     count = 0
     for module in modules:
-        with builder.create_api_output(args.outdir, module):
+        with builder.create_api_output(args.outdir, module, tokenizer.structures(module)):
             for p in sorted(modules[module], key=lambda x: x.name):
                 builder.write_procedure(p)
                 count += 1
 
-    with builder.create_exceptions_output(args.outdir):
-        for e in sorted(tokenizer.errors()):
-            builder.write_exception(e)
+    exceptions = tokenizer.errors()
+    if len(exceptions) > 0:
+        with builder.create_exceptions_output(args.outdir):
+            for e in exceptions:
+                builder.write_exception(e)
+
+    constants = tokenizer.constants()
+    if len(constants) > 0:
+        with builder.create_constants_output(args.outdir):
+            for n, v in constants:
+                builder.write_constant(n, v)
+
     return count
 
 

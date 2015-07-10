@@ -102,3 +102,37 @@ def return_union_close():
 def exception_class(name):
     """declare exception class"""
     return "class {0}(UserError):\n    pass".format(name)
+
+
+def declare_constant(name, value):
+    """declare constant"""
+    return "{0} = {1}".format(name, value)
+
+
+def include_for_structures(kinds):
+    """get the includes for structures depends on kind"""
+    if 'ENUM' in kinds:
+        return 'from enum import Enum'
+    return ''
+
+
+def declare_structure(kind, name, fields):
+    """declare the structure"""
+    if kind == 'ENUM':
+        return "class {0}(Enum):\n    {1}".format(
+            name.title(), "\n    ".join('{0} = {1!r}'.format(x.lower(), x) for x in fields)
+        )
+
+    return """\
+class {0}(set):
+    __choice = frozenset(({1}))
+
+    def __init__(self, v):
+        nv = set(v) & self.__choice
+        if len(nv) != len(v):
+            raise ValueError("unexpected value %s" % nv)
+        self.__value = nv
+
+    @property
+    def value(self):
+        return self.__value""".format(name.title(), ", ".join(map(repr, fields)))

@@ -124,9 +124,6 @@ BEGIN
     SELECT `a` FROM t; -- > array
 END$$
 """,
-        "exceptions": """
-from wsql import UserError
-""",
         "python3_aio": '''
 @coroutine
 def test_procedure2(connection, c1=None, c2=None):
@@ -169,9 +166,6 @@ BEGIN
     DELETE FROM t;
 END$$
 """,
-        "exceptions": """
-from wsql import UserError
-""",
         "python3_aio": '''
 @coroutine
 def procedure3(connection):
@@ -210,9 +204,6 @@ BEGIN
 END$$
 """,
         "filename": "table1.py",
-        "exceptions": """
-from wsql import UserError
-""",
         "python3_aio": '''
 @coroutine
 def update(connection, i=None):
@@ -261,9 +252,6 @@ BEGIN
 END$$
 """,
         "filename": "table1.py",
-        "exceptions": """
-from wsql import UserError
-""",
         "python3_aio": '''
 @coroutine
 def query(connection, i=None):
@@ -299,6 +287,97 @@ def query(connection, i=None):
             __result = __cursor.fetchxall()[0]
             __result.update({"items": __cursor.fetchxall()})
             return __result
+
+'''
+    },
+    {
+        "sql": b"""
+-- CONSTANT THIS_IS_CONST_1 1
+
+CREATE TABLE IF NOT EXISTS `table2` (
+ c1 ENUM('one', 'two'), c2 SET('red', 'blue', 'green')
+);
+
+CREATE PROCEDURE `table2.query` (i BIGINT)
+BEGIN
+    SELECT $C1 AS `a`;
+END$$
+""",
+        "filename": "table2.py",
+        "constants": """
+THIS_IS_CONST_1 = 1
+""",
+        "python3_aio": '''\
+from enum import Enum
+
+
+class C1(Enum):
+    one = 'one'
+    two = 'two'
+
+
+class C2(set):
+    __choice = frozenset(('blue', 'green', 'red'))
+
+    def __init__(self, v):
+        nv = set(v) & self.__choice
+        if len(nv) != len(v):
+            raise ValueError("unexpected value %s" % nv)
+        self.__value = nv
+
+    @property
+    def value(self):
+        return self.__value
+
+
+@coroutine
+def query(connection, i=None):
+    """
+    query the table2
+    :param i: the i(BIGINT, IN))
+    """
+
+    @coroutine
+    def __query(__connection):
+        __cursor = __connection.cursor()
+        try:
+            yield from __cursor.callproc(b"table2.query", (i,))
+        finally:
+            yield from __cursor.close()
+''',
+
+        "python3": '''\
+from enum import Enum
+
+
+class C1(Enum):
+    one = 'one'
+    two = 'two'
+
+
+class C2(set):
+    __choice = frozenset(('blue', 'green', 'red'))
+
+    def __init__(self, v):
+        nv = set(v) & self.__choice
+        if len(nv) != len(v):
+            raise ValueError("unexpected value %s" % nv)
+        self.__value = nv
+
+    @property
+    def value(self):
+        return self.__value
+
+
+def query(connection, i=None):
+    """
+    query the table2
+    :param i: the i(BIGINT, IN))
+    """
+
+    def __query(__connection):
+        with __connection.cursor() as __cursor:
+            __cursor.callproc(b"table2.query", (i,))
 
 '''
     }

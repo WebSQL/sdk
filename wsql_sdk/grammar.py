@@ -14,7 +14,7 @@ SOFTWARE.
 """
 __author__ = "@bg"
 
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 from functools import reduce
 from pyparsing import alphanums, CaselessKeyword, Combine, delimitedList, Group, Keyword, Literal, \
     lineEnd, lineStart, MatchFirst, nestedExpr, nums, oneOf, Optional, Regex, Suppress, Word, \
@@ -31,6 +31,10 @@ def _macros(expr):
 
 
 def _sql_comment(expr):
+    return lineStart + Suppress(Literal("-- ")) + expr
+
+
+def _select_hint(expr):
     return Suppress(Literal("-- >")) + expr
 
 # keywords
@@ -47,12 +51,16 @@ _COMMENT = CaselessKeyword("COMMENT")
 _CREATE = CaselessKeyword("CREATE")
 _DEFINER = CaselessKeyword("DEFINER")
 _PROCEDURE = CaselessKeyword("PROCEDURE")
+_TABLE = CaselessKeyword("TABLE")
 _INTO = CaselessKeyword("INTO")
 _FROM = CaselessKeyword("FROM")
+_ENUM = CaselessKeyword("ENUM")
+_SET = CaselessKeyword("SET")
 _SELECT = CaselessKeyword("SELECT").setResultsName("command")
 _DELETE = CaselessKeyword("DELETE").setResultsName("command")
 _INSERT = CaselessKeyword("INSERT").setResultsName("command")
 _UPDATE = CaselessKeyword("UPDATE").setResultsName("command")
+IF_NOT_EXISTS = Group("IF") + CaselessKeyword("NOT") + CaselessKeyword("EXISTS")
 
 _THROW = _sql_identifier(Keyword("__throw"))
 _RETURNS = CaselessKeyword("returns")
@@ -99,7 +107,7 @@ _IF_EXPR = _IF + SkipTo(lineEnd, include=True).setResultsName("condition")
 _ELSE_EXPR = _ELSE + lineEnd
 _ENDIF_EXPR = _ENDIF + lineEnd
 
-_RETURN_HINT_EXPR = _sql_comment(Optional(_ID + Suppress(Literal(":"))) + _RETURN_TYPE).setResultsName("hint")
+_RETURN_HINT_EXPR = _select_hint(Optional(_ID + Suppress(Literal(":"))) + _RETURN_TYPE).setResultsName("hint")
 _TEMP_TABLE_EXPR = _SQL_ID.setResultsName('table') + \
     nestedExpr(content=delimitedList(Group(_SQL_ID + _SQL_TYPE)), ignoreExpr=None).setResultsName('columns') +\
     Suppress(Literal(';'))
@@ -121,6 +129,14 @@ _DELETE_EXPR = _DELETE + _FROM + _TABLE_NAME + _SKIP_TO_END
 _THROW_EXPR = _CALL + _THROW + nestedExpr(content=_VALUE_LIST, ignoreExpr=None).setResultsName("args")
 
 _CALL_EXPR = _CALL + _SQL_ID.setResultsName("name") + _SKIP_TO_END
+
+_CONSTANT = _sql_comment(Keyword("CONSTANT")) + _ID + _VALUE
+
+_CREATE_TABLE = _CREATE + _TABLE + Suppress(Optional(IF_NOT_EXISTS)) + _SQL_ID.setResultsName('name') + \
+    SkipTo(";").setResultsName('body')
+
+_DECLARE_OPTIONS = _SQL_ID.setResultsName('name') + (_ENUM | _SET).setResultsName('kind') + \
+    nestedExpr(content=delimitedList(quotedString, ',', combine=False), ignoreExpr=None).setResultsName('options')
 
 
 class MacrosTokenizer:
@@ -367,9 +383,13 @@ class SQLTokenizer:
             _UPDATE_EXPR.copy().setParseAction(self.on_update) | \
             _DELETE_EXPR.copy().setParseAction(self.on_delete) | \
             _THROW_EXPR.copy().setParseAction(self.on_error) | \
-            _CALL_EXPR.copy().setParseAction(self.on_call)
+            _CALL_EXPR.copy().setParseAction(self.on_call) | \
+            _CONSTANT.copy().setParseAction(self.on_constant) | \
+            _CREATE_TABLE.copy().setParseAction(self.on_table)
 
         self._procedures = dict()
+        self._constants = list()
+        self._sturctures = dict()
         self._current = None
 
     @staticmethod
@@ -385,18 +405,18 @@ class SQLTokenizer:
         self._current = None
 
     def on_begin_procedure(self, tokens):
-        """begin of procedure handler"""
+        """catch the begin of procedure"""
         self._current = self.procedure_class(tokens.name[0], tokens.args[0], tokens.comment)
         if self._current.name in self._procedures:
             raise ValueError('The procedure %s already defined!' % self._current)
         self._procedures[self._current.name] = self._current
 
     def on_end_procedure(self, _):
-        """end of procedure handler"""
+        """catch the end of procedure"""
         self._current = None
 
     def on_select(self, tokens):
-        """select statement handler"""
+        """catch the select statement"""
         if self._current and not tokens.into:
             columns = tuple(self._column_name(x) for x in tokens.columns)
             self._current.add_read_command(tokens.op, tokens.table and tokens.table[0], columns)
@@ -411,7 +431,7 @@ class SQLTokenizer:
             self._current.add_return(name, rtype or "object", columns)
 
     def on_insert(self, tokens):
-        """insert statement handler"""
+        """catch the modify statement"""
         if self._current:
             self._current.add_write_command(tokens.op, tokens.table, [])
 
@@ -419,12 +439,27 @@ class SQLTokenizer:
     on_delete = on_insert
 
     def on_error(self, tokens):
-        """raise keyword handler"""
+        """catch the raising of the exception"""
         if self._current:
             self._current.errors.add(tokens.args[0][0].strip("'\""))
 
+    def on_constant(self, token):
+        """catch constants"""
+        self._constants.append((token.name, token.value))
+
+    def on_table(self, tokens):
+        """catch the table"""
+        table_name = tokens.name.name
+        structures = defaultdict(list)
+        for t in _DECLARE_OPTIONS.scanString(tokens.body):
+            t = t[0]
+            structures[t.kind].append((t.name.name, sorted(x.strip('"\'') for x in t.options[0])))
+
+        if len(structures) > 0:
+            self._sturctures[table_name] = structures
+
     def on_call(self, tokens):
-        """call keyword handler"""
+        """catch the procedure call"""
         if self._current:
             self._current.children.append(tokens[1])
 
@@ -435,6 +470,19 @@ class SQLTokenizer:
         """
         for _ in self._grammar.scanString(text):
             pass
+
+    def constants(self):
+        """
+        :return: the list of constants
+        """
+        return sorted(self._constants)
+
+    def structures(self, name):
+        """
+        :return: the list of enums
+        """
+        if name in self._sturctures:
+            return self._sturctures[name]
 
     def procedures(self):
         """

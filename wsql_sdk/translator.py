@@ -40,6 +40,8 @@ class Translator(MacrosTokenizer):
 
     def on_variable(self, name, value):
         self.output.write(value)
+        if name.startswith('_'):
+            self.output.write('-- CONSTANT %s %s\n', name, value)
 
     def on_include(self, filename):
         filename = os.path.join(self.workdir, filename)

@@ -65,8 +65,8 @@ class TestCodeGen(TestCase):
 
                 opened_files = dict()
 
-                def _open_mock(filename):
-                    r = opened_files[filename] = StringIO()
+                def _open_mock(fname):
+                    r = opened_files[fname] = StringIO()
                     r.close = lambda: None
                     return r
 
@@ -75,16 +75,23 @@ class TestCodeGen(TestCase):
 
                 filename = data.get("filename", "__init__.py")
 
-                self.assertEqual({filename, "exceptions.py"}, set(opened_files.keys()))
+                self.assertIn(filename, opened_files)
 
                 code = opened_files[filename]
                 code.seek(0)
                 self.assertIn(data[lang], code.read())
-                exceptions = opened_files["exceptions.py"]
-                exceptions.seek(0)
-                self.assertIn(data["exceptions"], exceptions.read())
+                for n in ("constants", "exceptions"):
+                    fn = n + ".py"
+                    if n in data:
+                        self.assertIn(fn, opened_files)
+                        file = opened_files[fn]
+                        file.seek(0)
+                        self.assertIn(data[n], file.read())
+                    else:
+                        self.assertNotIn(fn, opened_files)
 
     def test_duplicate_fields(self):
+        """test the duplicated field fire warning"""
         r1 = Dummy()
         r1.name = ""
         r1.type = "object"
