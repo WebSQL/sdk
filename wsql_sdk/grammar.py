@@ -95,7 +95,7 @@ _RETURN_TYPE = oneOf("object array", caseless=True).setResultsName("type")
 
 # expressions
 _DEFINE_FUNCTION = _DEFINE + _ID + nestedExpr(content=_ID_LIST, ignoreExpr=None).setResultsName("args") + \
-    Suppress(White()) + Regex(".+$").setResultsName("body")
+    Suppress(White()) + Regex(".*$").setResultsName("body")
 
 _DEFINE_VAR = _DEFINE + _ID + _VALUE
 _UNDEFINE = _UNDEF + _ID
@@ -181,7 +181,6 @@ class MacrosTokenizer:
     def _expand_function(self, target):
         """expand the macro function"""
         macros = self.functions[target.name]
-
         args = (x.startswith('$') and self.variables.get(x[1:], x) or x for x in target.args[0])
         args = dict(zip(macros.args, args))
         if len(args) != len(macros.args):
@@ -245,6 +244,9 @@ class MacrosTokenizer:
             return
 
         macros = self.functions[token.name]
+        if len(macros.body) == 0:
+            return
+
         args = dict(zip(macros.args, token.args[0]))
         if len(args) != len(macros.args):
             raise ValueError("%d: invalid number of parameters for %s, expected %s" % (line, token.name, macros.args))

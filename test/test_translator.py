@@ -218,3 +218,11 @@ $f2(1, t);"""
         ))
         self.output.seek(0)
         self.assertEqual("SELECT 1 FROM t WHERE a;", self.output.read().strip())
+
+    def test_define_empty_macros(self):
+        self.trans.parse(StringIO('#DEFINE f1(a)\n$f1(1)\n'))
+        macros = self.trans.functions['f1']
+        self.assertEqual(['a'], list(macros.args))
+        self.assertEqual(0, len(macros.body))
+        self.output.seek(0)
+        self.assertEqual('', self.output.read())
