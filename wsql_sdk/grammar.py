@@ -269,7 +269,7 @@ class MacrosTokenizer:
         """main way of condition"""
         if not self.suppress:
             self.conditions_stack.append(self.suppress)
-            self.suppress = not eval(token.condition[0], self.variables)
+            self.suppress = not eval(token.condition[0], {'defined': lambda x: x in self.variables}, self.variables)
 
     def _handle_else(self, *_):
         """alternative way of condition"""

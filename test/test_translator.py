@@ -140,6 +140,17 @@ class TestTranslator(TestCase):
         self.assertEqual("-- CONSTANT var4 1\nselect 1 from t2;\n", self.output.read())
 
         self.trans.reset()
+        self.output.seek(0)
+        self.output.truncate(0)
+        self.trans.parse(StringIO("#if defined('VAR')\n"
+                                  "select TRUE\n"
+                                  "#else\n"
+                                  "select FALSE\n"
+                                  "#endif\n"))
+        self.output.seek(0)
+        self.assertEqual("select FALSE\n", self.output.read())
+
+        self.trans.reset()
         self.assertRaisesRegex(ValueError, "mismatch if/endif",
                                self.trans.parse, StringIO("#if 1\n select * from t;"))
 
