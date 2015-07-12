@@ -279,7 +279,7 @@ def parse_arguments(argv=None):
     parser.add_argument('input', nargs='?', help='source file, by default input stream', default=sys.stdin)
     parser.add_argument('-o', '--outdir', help='output dir', default=os.curdir)
     parser.add_argument('-l', '--language', help='the language', choices=available_language, required=True)
-    parser.add_argument('--sep', help='the module separator', default='.')
+    parser.add_argument('--sep', help='the module separator', default='.', choices=['.', '::'])
     return parser.parse_args(argv)
 
 

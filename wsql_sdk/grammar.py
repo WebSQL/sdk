@@ -86,6 +86,7 @@ _SELECT_COLUMN = (_NESTED_SELECT | _NESTED_CALL | _SQL_ID.setResultsName("name")
     Optional(_AS + _SQL_ID.setResultsName("alias"))
 
 _TABLE_NAME = _SQL_ID.setResultsName("table")
+_PROCEDURE_NAME = _sql_identifier(Word(alphanums + "_.:").setResultsName("name")).setResultsName('name')
 
 _SELECT_COLUMN_LIST = delimitedList(Group(_SELECT_COLUMN), combine=False).setResultsName("columns")
 _SQL_ARG = Optional(_SQL_DIRECTION, default='IN') + _SQL_ID + _SQL_TYPE
@@ -114,7 +115,7 @@ _TEMP_TABLE_EXPR = _SQL_ID.setResultsName('table') + \
 
 _PROCEDURE_COMMENT_FORMAT = Optional(_TEMP_TABLE_EXPR) + Optional(_RETURNS + oneOf("union", caseless=True).setResultsName("mode")) + lineEnd
 
-_CREATE_PROCEDURE = _CREATE + Optional(_DEFINER + '=' + _SQL_ID) + _PROCEDURE + _SQL_ID.setResultsName('name') + \
+_CREATE_PROCEDURE = _CREATE + Optional(_DEFINER + '=' + _SQL_ID) + _PROCEDURE + _PROCEDURE_NAME + \
     nestedExpr(content=_SQL_ARGS, ignoreExpr=None).setResultsName('args') + Optional(_COMMENT + quotedString.setResultsName("comment"))
 
 _END_PROCEDURE = Regex('END\s*\$\$')
@@ -128,7 +129,7 @@ _DELETE_EXPR = _DELETE + _FROM + _TABLE_NAME + _SKIP_TO_END
 
 _THROW_EXPR = _CALL + _THROW + nestedExpr(content=_VALUE_LIST, ignoreExpr=None).setResultsName("args")
 
-_CALL_EXPR = _CALL + _SQL_ID.setResultsName("name") + _SKIP_TO_END
+_CALL_EXPR = _CALL + _PROCEDURE_NAME + _SKIP_TO_END
 
 _CONSTANT = _sql_comment(Keyword("CONSTANT")) + _ID + _VALUE
 
