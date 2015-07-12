@@ -49,10 +49,11 @@ class TestCodeGen(TestCase):
 
     def test_parse_cmdline(self):
         """ test parse commandline arguments """
-        args = codegen.parse_arguments(["-o", "build", "-l", "python3_aio", "test.sql"])
+        args = codegen.parse_arguments(["-o", "build", "-l", "python3_aio", '--sep', '::', "test.sql"])
         self.assertEqual("test.sql", args.input)
         self.assertEqual("build", args.outdir)
         self.assertEqual("python3_aio", args.language)
+        self.assertEqual("::", args.sep)
 
     def test_syntax(self):
         """ test generate result with different templates """
@@ -62,6 +63,7 @@ class TestCodeGen(TestCase):
                 args.input = BytesIO(data["sql"])
                 args.language = lang
                 args.outdir = ""
+                args.sep = '.'
 
                 opened_files = dict()
 
