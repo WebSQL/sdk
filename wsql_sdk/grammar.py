@@ -485,7 +485,7 @@ class SQLTokenizer:
         """
         :return: the list of constants
         """
-        return sorted(self._constants)
+        return self._constants
 
     def structures(self, name):
         """

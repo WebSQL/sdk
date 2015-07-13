@@ -20,6 +20,7 @@ import sys
 import warnings
 import itertools
 
+from collections import defaultdict
 from datetime import datetime
 from functools import reduce
 from importlib import machinery
@@ -291,7 +292,7 @@ def process(args):
 
     builder = create_builder(args.language)
 
-    modules = {}
+    modules = defaultdict(list)
     for p in tokenizer.procedures():
         module, _, name = p.name.partition(args.sep)
         if len(name) == 0:
@@ -303,7 +304,7 @@ def process(args):
 
         builder.validate(p)
         procedure = Procedure(module, name, p, tokenizer.is_read_only(p), sorted(tokenizer.errors(p)))
-        modules.setdefault(procedure.module or "__init__", []).append(procedure)
+        modules[procedure.module or "__init__"].append(procedure)
 
     count = 0
     for module in modules:
@@ -315,13 +316,13 @@ def process(args):
     exceptions = tokenizer.errors()
     if len(exceptions) > 0:
         with builder.create_exceptions_output(args.outdir):
-            for e in exceptions:
+            for e in sorted(exceptions):
                 builder.write_exception(e)
 
     constants = tokenizer.constants()
     if len(constants) > 0:
         with builder.create_constants_output(args.outdir):
-            for n, v in constants:
+            for n, v in sorted(constants):
                 builder.write_constant(n, v)
 
     return count
