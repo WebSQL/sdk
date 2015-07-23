@@ -46,6 +46,10 @@ $f3("a", "b c");
     "./recursive.sql": """
 #include "recursive.sql"
 
+""",
+    "./invalid_if.sql": """
+#if defined("TEST")
+#include "/common/vars.sql"
 """
 }
 
@@ -150,13 +154,11 @@ class TestTranslator(TestCase):
         self.output.seek(0)
         self.assertEqual("select FALSE\n", self.output.read())
 
-        self.trans.reset()
-        self.assertRaisesRegex(ValueError, "mismatch if/endif",
-                               self.trans.parse, StringIO("#if 1\n select * from t;"))
-
-        self.trans.reset()
-        self.assertRaisesRegex(ValueError, "mismatch if/endif",
-                               self.trans.parse, StringIO("select * from t;\n#endif\n"))
+        with mock.patch('builtins.open', lambda f, *args, **kwargs: _open_mock(f)):
+            with mock.patch('os.listdir', _listdir_mock):
+                self.trans.reset()
+                self.assertRaisesRegex(ValueError, "mismatch if/endif",
+                                       self.trans.compile, "invalid_if.sql")
 
     def test_redefine_macros(self):
         """ test warning generated if macros was redefined """

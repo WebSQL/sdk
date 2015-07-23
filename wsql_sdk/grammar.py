@@ -330,9 +330,6 @@ class MacrosTokenizer:
                 self.nop(current[start:])
             current = ''
 
-        if len(self.conditions_stack):
-            raise ValueError("mismatch if/endif")
-
 
 class _Procedure:
     """Procedure abstraction"""

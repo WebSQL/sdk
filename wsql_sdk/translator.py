@@ -78,6 +78,8 @@ class Translator(MacrosTokenizer):
         self.include_file(os.path.join(self.workdir, filename))
         self.output.flush()
         self.close_output and self.output.close()
+        if len(self.conditions_stack):
+            raise ValueError("mismatch if/endif")
 
 
 def parse_arguments(argv=None):
