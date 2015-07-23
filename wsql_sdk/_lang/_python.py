@@ -19,7 +19,8 @@ file_header = """\
 # Auto-generated file by wsql-codegen(part of WSQL-SDK)
 # {timestamp}"""
 
-includes_for_exceptions = """from wsql import UserError"""
+includes_for_exceptions = """
+from wsql import UserError"""
 
 
 def doc_open():
