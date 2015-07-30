@@ -396,7 +396,7 @@ class SQLTokenizer:
 
         self._procedures = dict()
         self._constants = list()
-        self._sturctures = dict()
+        self._structures = dict()
         self._current = None
 
     @staticmethod
@@ -463,7 +463,7 @@ class SQLTokenizer:
             structures[t.kind].append((t.name.name, sorted(x.strip('"\'') for x in t.options[0])))
 
         if len(structures) > 0:
-            self._sturctures[table_name] = structures
+            self._structures[table_name] = structures
 
     def on_call(self, tokens):
         """catch the procedure call"""
@@ -488,8 +488,8 @@ class SQLTokenizer:
         """
         :return: the list of enums
         """
-        if name in self._sturctures:
-            return self._sturctures[name]
+        if name in self._structures:
+            return self._structures[name]
 
     def procedures(self):
         """
