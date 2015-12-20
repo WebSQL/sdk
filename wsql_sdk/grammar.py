@@ -98,7 +98,7 @@ _RETURN_TYPE = oneOf("object array", caseless=True).setResultsName("type")
 _DEFINE_FUNCTION = _DEFINE + _ID + nestedExpr(content=_ID_LIST, ignoreExpr=None).setResultsName("args") + \
     Suppress(White()) + Regex(".*$").setResultsName("body")
 
-_DEFINE_VAR = _DEFINE + _ID + _VALUE
+_DEFINE_VAR = _DEFINE + _ID + SkipTo(lineEnd, include=True).setResultsName("value")
 _UNDEFINE = _UNDEF + _ID
 _INCLUDE_FILE = _INCLUDE + quotedString.setResultsName("filename")
 _EXPAND_VAR = Suppress('$') + _ID
@@ -222,7 +222,7 @@ class MacrosTokenizer:
             if token.name in self.variables:
                 warnings.warn('%d: macros %s already defined!' % (line, token.name))
 
-            value = self.variables[token.name] = self._recurisve_expand(token.value)
+            value = self.variables[token.name] = self._recurisve_expand(token.value[0])
             if not token.name.startswith("_"):
                 self.on_constant(token.name, value)
 
