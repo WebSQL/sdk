@@ -196,3 +196,10 @@ class TestInterpreter(TestCase):
         self.assertEqual('c2', found[1][0].name[0])
         self.assertEqual('SET', found[1][0].kind)
         self.assertEqual(['"0"', '"1"', '"2"'], found[1][0].options.asList()[0])
+
+    def test_sql_type(self):
+        found = list(grammar._SQL_TYPE.scanString("BINARY(16), INT, DECIMAL(32, 16)"))
+        self.assertEqual(3, len(found))
+        self.assertEqual("BINARY(16)", found[0][0][0])
+        self.assertEqual("INT", found[1][0][0])
+        self.assertEqual("DECIMAL(32, 16)", found[2][0][0])

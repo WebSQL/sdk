@@ -74,7 +74,7 @@ _VALUE = (Combine(_ID + Literal("(") + SkipTo(")", include=True)) |
 _VALUE_LIST = delimitedList(_VALUE, combine=False)
 
 _SQL_DIRECTION = oneOf('INOUT IN OUT', caseless=True)
-_SQL_TYPE = Combine(Word(alphanums + '_') + Optional('(' + Word(nums) + ')'))
+_SQL_TYPE = Combine(Word(alphanums + '_') + Optional('(' + delimitedList(Word(nums + ' '), combine=True) + ')'))
 _SQL_ID = _sql_identifier(_ID)
 _SQL_ID_LIST = delimitedList(_SQL_ID, combine=False)
 _SKIP_TO_END = SkipTo(_SQL_EOL)

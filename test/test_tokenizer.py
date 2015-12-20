@@ -113,6 +113,13 @@ BEGIN
 END$$
 """
 
+_TEST_PROCEDURE6 = """
+CREATE PROCEDURE `test_procedure6` (a DECIMAL(32,16))
+BEGIN
+    SELECT arg1;
+END$$
+"""
+
 _TEST_PROCEDURE_INVALID1 = """
 CREATE PROCEDURE `test_invalid1` ()
  COMMENT "args (c1 INT, c2 BINARY(255)); returns merge"
@@ -219,3 +226,11 @@ class TestTokenizer(TestCase):
         """ test parse return different """
         self.tokenizer.parse(_TEST_PROCEDURE5)
         self.assertEqual("union", self.tokenizer._procedures["test_procedure5"].return_mod)
+
+    def test_parse_decimal_type(self):
+        self.tokenizer.parse(_TEST_PROCEDURE6)
+        self.assertIn("test_procedure6", self.tokenizer._procedures)
+        self.assertEqual(
+            "DECIMAL(32,16)",
+            self.tokenizer._procedures["test_procedure6"].arguments[0].type
+        )
