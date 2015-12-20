@@ -293,6 +293,7 @@ def query(connection, i=None):
     {
         "sql": b"""
 -- CONSTANT THIS_IS_CONST_1 1
+-- CONSTANT CONST2 abc
 
 CREATE TABLE IF NOT EXISTS `table2` (
  c1 ENUM('one', 'two'), c2 SET('red', 'blue', 'green')
@@ -305,6 +306,8 @@ END$$
 """,
         "filename": "table2.py",
         "constants": """
+CONST2 = 'abc'
+
 THIS_IS_CONST_1 = 1
 """,
         "python3_aio": '''\
