@@ -22,6 +22,10 @@ file_header = """\
 includes_for_exceptions = """
 from wsql import UserError"""
 
+include_for_union = "from wsql.converters import ObjectDict"
+
+include_local_exceptions = "\nfrom . import exceptions"""
+
 
 def doc_open():
     """start doc-string"""
@@ -35,12 +39,12 @@ def doc_close():
 
 def doc_arg(name, brief):
     """argument of doc_string"""
-    return "    :param {0}: {1})".format(name, brief)
+    return "    :param {0}: {1}".format(name, brief)
 
 
 def doc_brief(brief):
     """format brief for doc-string"""
-    return "    " + brief
+    return "    {0}\n".format(brief)
 
 
 def doc_errors(errors):
@@ -50,12 +54,12 @@ def doc_errors(errors):
 
 def doc_return(returns):
     """format return for doc-string"""
-    return "    :return {0}".format(repr(returns).replace("\'", '"'))
+    return "    :returns: {0}".format(repr(returns).replace("\'", '"'))
 
 
 def format_result(name, result):
     if name:
-        return '{{"{0}": {1}}}'.format(name, result)
+        return 'ObjectDict({0}={1})'.format(name, result)
     return result
 
 
@@ -118,7 +122,7 @@ def declare_constant(name, value):
 def include_for_structures(kinds):
     """get the includes for structures depends on kind"""
     if 'ENUM' in kinds:
-        return 'from enum import Enum'
+        return '\nfrom enum import Enum'
     return ''
 
 

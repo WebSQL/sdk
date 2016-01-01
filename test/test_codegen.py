@@ -81,7 +81,9 @@ class TestCodeGen(TestCase):
 
                 code = opened_files[filename]
                 code.seek(0)
-                self.assertIn(data[lang], code.read())
+                actual = code.read()
+                print(actual)
+                self.assertIn(data[lang], actual)
                 for n in ("constants", "exceptions"):
                     fn = n + ".py"
                     if n in data:
@@ -110,7 +112,7 @@ class TestCodeGen(TestCase):
         proc.returns = (r1, r2)
 
         with catch_warnings(record=True) as log:
-            codegen.Procedure(proc.name, "", proc, True, [])
+            codegen.Procedure(proc.name, "", proc, True, [], proc.returns)
             self.assertGreater(len(log), 0)
             self.assertIn("test has duplicated fields: a, c", str(log[0]))
 
@@ -119,7 +121,7 @@ class TestCodeGen(TestCase):
         r2.fields = ("q", "e")
 
         with catch_warnings(record=True) as log:
-            codegen.Procedure(proc.name, "", proc, True, [])
+            codegen.Procedure(proc.name, "", proc, True, [], proc.returns)
             self.assertGreater(len(log), 0)
             self.assertIn("test has duplicated fields: c", str(log[0]))
 
@@ -128,6 +130,6 @@ class TestCodeGen(TestCase):
         r2.fields = ("q", "e")
 
         with catch_warnings(record=True) as log:
-            codegen.Procedure(proc.name, "", proc, True, [])
+            codegen.Procedure(proc.name, "", proc, True, [], proc.returns)
             self.assertGreater(len(log), 0)
             self.assertIn("test has duplicated fields: c", str(log[0]))

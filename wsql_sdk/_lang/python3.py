@@ -19,8 +19,7 @@ from wsql_sdk._lang._python import *
 
 includes_for_api = """
 from wsql import Error, handle_error
-from wsql.cluster import transaction
-from . import exceptions"""
+from wsql.cluster import transaction"""
 
 file_ext = ".py"
 indent = "    "

@@ -48,6 +48,8 @@ class TestError(UserError):
 from asyncio import coroutine
 from wsql import Error, handle_error
 from wsql.cluster import transaction
+from wsql.converters import ObjectDict
+
 from . import exceptions
 
 
@@ -55,8 +57,10 @@ from . import exceptions
 def test_procedure1(connection, args=None):
     """
     test the procedure1
-    :param args: list of {c1(INT),c2(BINARY(255))})
-    :return ("a", "b")
+
+    :param connection: the connection object
+    :param args: list of {c1(INT),c2(BINARY(255))}
+    :returns: ("a", "b")
     :raises: TestError
     """
 
@@ -86,14 +90,18 @@ def test_procedure1(connection, args=None):
         "python3": '''
 from wsql import Error, handle_error
 from wsql.cluster import transaction
+from wsql.converters import ObjectDict
+
 from . import exceptions
 
 
 def test_procedure1(connection, args=None):
     """
     test the procedure1
-    :param args: list of {c1(INT),c2(BINARY(255))})
-    :return ("a", "b")
+
+    :param connection: the connection object
+    :param args: list of {c1(INT),c2(BINARY(255))}
+    :returns: ("a", "b")
     :raises: TestError
     """
 
@@ -129,9 +137,11 @@ END$$
 def test_procedure2(connection, c1=None, c2=None):
     """
     test the procedure2
-    :param c1: the c1(INT, IN))
-    :param c2: the c2(VARCHAR(255), IN))
-    :return [("a",)]
+
+    :param connection: the connection object
+    :param c1: the c1(INT, IN)
+    :param c2: the c2(VARCHAR(255), IN)
+    :returns: [("a",)]
     """
 
     @coroutine
@@ -148,9 +158,11 @@ def test_procedure2(connection, c1=None, c2=None):
 def test_procedure2(connection, c1=None, c2=None):
     """
     test the procedure2
-    :param c1: the c1(INT, IN))
-    :param c2: the c2(VARCHAR(255), IN))
-    :return [("a",)]
+
+    :param connection: the connection object
+    :param c1: the c1(INT, IN)
+    :param c2: the c2(VARCHAR(255), IN)
+    :returns: [("a",)]
     """
 
     def __query(__connection):
@@ -171,6 +183,8 @@ END$$
 def procedure3(connection):
     """
     procedure3
+
+    :param connection: the connection object
     """
 
     @transaction
@@ -187,6 +201,8 @@ def procedure3(connection):
 def procedure3(connection):
     """
     procedure3
+
+    :param connection: the connection object
     """
 
     @transaction
@@ -209,8 +225,10 @@ END$$
 def update(connection, i=None):
     """
     update the table1
-    :param i: the i(BIGINT, IN))
-    :return (("a",), [("b", "c")])
+
+    :param connection: the connection object
+    :param i: the i(BIGINT, IN)
+    :returns: (("a",), [("b", "c")])
     """
 
     @coroutine
@@ -230,8 +248,10 @@ def update(connection, i=None):
 def update(connection, i=None):
     """
     update the table1
-    :param i: the i(BIGINT, IN))
-    :return (("a",), [("b", "c")])
+
+    :param connection: the connection object
+    :param i: the i(BIGINT, IN)
+    :returns: (("a",), [("b", "c")])
     """
 
     def __query(__connection):
@@ -257,8 +277,10 @@ END$$
 def query(connection, i=None):
     """
     query the table1
-    :param i: the i(BIGINT, IN))
-    :return ("a", "items.b", "items.c")
+
+    :param connection: the connection object
+    :param i: the i(BIGINT, IN)
+    :returns: ("a", "items.b", "items.c")
     """
 
     @coroutine
@@ -267,7 +289,7 @@ def query(connection, i=None):
         try:
             yield from __cursor.callproc(b"table1.query", (i,))
             __result = (yield from __cursor.fetchxall())[0]
-            __result.update({"items": (yield from __cursor.fetchxall())})
+            __result.update(ObjectDict(items=(yield from __cursor.fetchxall())))
             return __result
         finally:
             yield from __cursor.close()
@@ -277,15 +299,17 @@ def query(connection, i=None):
 def query(connection, i=None):
     """
     query the table1
-    :param i: the i(BIGINT, IN))
-    :return ("a", "items.b", "items.c")
+
+    :param connection: the connection object
+    :param i: the i(BIGINT, IN)
+    :returns: ("a", "items.b", "items.c")
     """
 
     def __query(__connection):
         with __connection.cursor() as __cursor:
             __cursor.callproc(b"table1.query", (i,))
             __result = __cursor.fetchxall()[0]
-            __result.update({"items": __cursor.fetchxall()})
+            __result.update(ObjectDict(items=__cursor.fetchxall()))
             return __result
 
 '''
@@ -337,7 +361,9 @@ class C2(set):
 def query(connection, i=None):
     """
     query the table2
-    :param i: the i(BIGINT, IN))
+
+    :param connection: the connection object
+    :param i: the i(BIGINT, IN)
     """
 
     @coroutine
@@ -375,7 +401,9 @@ class C2(set):
 def query(connection, i=None):
     """
     query the table2
-    :param i: the i(BIGINT, IN))
+
+    :param connection: the connection object
+    :param i: the i(BIGINT, IN)
     """
 
     def __query(__connection):

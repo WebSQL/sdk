@@ -120,6 +120,7 @@ _CREATE_PROCEDURE = _CREATE + Optional(_DEFINER + '=' + _SQL_ID) + _PROCEDURE + 
 
 _END_PROCEDURE = Regex('END\s*\$\$')
 
+_DECLARE_CURSOR = CaselessKeyword('DECLARE') + _SQL_ID + CaselessKeyword('CURSOR') + CaselessKeyword('FOR') + _SKIP_TO_END
 _SELECT_EXPR = _SELECT + _SELECT_COLUMN_LIST + Optional(Group(_INTO + _SQL_ID_LIST).setResultsName("into")) + \
     Optional(_FROM + _TABLE_NAME) + _SKIP_TO_END + Suppress(_SQL_EOL) + Optional(_RETURN_HINT_EXPR)
 
@@ -385,6 +386,7 @@ class SQLTokenizer:
         self._grammar = \
             _CREATE_PROCEDURE.copy().setParseAction(self.on_begin_procedure) | \
             _END_PROCEDURE.copy().setParseAction(self.on_end_procedure) | \
+            _DECLARE_CURSOR.copy() | \
             _SELECT_EXPR.copy().setParseAction(self.on_select) | \
             _INSERT_EXPR.copy().setParseAction(self.on_insert) | \
             _UPDATE_EXPR.copy().setParseAction(self.on_update) | \
@@ -512,6 +514,18 @@ class SQLTokenizer:
         for child in set(procedure.children):
             errors |= self.errors(self._procedures[child])
         return errors
+
+    def returns(self, procedure):
+        """
+        get procedure returns recursively
+        :param procedure: optional, start procedure
+        :return the set of errors
+        :rtype set
+        """
+        returns = list(procedure.returns)
+        for child in procedure.children:
+            returns.extend(self.returns(self._procedures[child]))
+        return returns
 
     def queries(self, procedure):
         """

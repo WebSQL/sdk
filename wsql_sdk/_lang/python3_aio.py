@@ -21,8 +21,8 @@ __author__ = "@bg"
 includes_for_api = """
 from asyncio import coroutine
 from wsql import Error, handle_error
-from wsql.cluster import transaction
-from . import exceptions"""
+from wsql.cluster import transaction"""
+
 
 file_ext = ".py"
 indent = "    "

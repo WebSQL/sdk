@@ -50,11 +50,12 @@ class TempTable:
 
 class Procedure:
     """The procedure description"""
-    def __init__(self, module, name, proc, read_only, errors):
+    def __init__(self, module, name, proc, read_only, errors, returns):
         self.module, self.name = module, name
         self.__proc = proc
         self.read_only = read_only
         self.errors = errors
+        self.returns = returns
 
         self.arguments = [Argument(x) for x in proc.arguments]
         if proc.temptable:
@@ -66,10 +67,10 @@ class Procedure:
         else:
             self.brief = '%s%s' % (action, " the " + self.module if self.module else "")
 
-        if self.__proc.returns:
+        if self.returns:
             result = []
             named = set()
-            for ret in self.__proc.returns:
+            for ret in self.returns:
                 if ret.type == "array":
                     kind = lambda x: [x]
                 else:
@@ -125,6 +126,7 @@ class Builder:
         """write doc string"""
         self.write(self.syntax.doc_open())
         self.write(self.syntax.doc_brief(procedure.brief))
+        self.write(self.syntax.doc_arg("connection", "the connection object"))
 
         for arg in procedure.arguments:
             self.write(self.syntax.doc_arg(arg.name, arg.brief))
@@ -177,11 +179,15 @@ class Builder:
             self.stream.close()
             self.stream.close()
 
-    def create_api_output(self, path, module, structures):
+    def create_api_output(self, path, module, structures, has_union):
         """open new file to write procedures"""
         self.stream = open(os.path.join(path, module + self.syntax.file_ext), "w")
         self.write(self.syntax.file_header.format(timestamp=datetime.now()))
         self.write(self.syntax.includes_for_api)
+        if has_union:
+            self.write(self.syntax.include_for_union)
+        self.write(self.syntax.include_local_exceptions)
+
         if structures is not None:
             self.write(self.syntax.include_for_structures(structures))
             for kind in sorted(structures):
@@ -293,6 +299,7 @@ def process(args):
     builder = create_builder(args.language)
 
     modules = defaultdict(list)
+    has_union = dict()
     for p in tokenizer.procedures():
         module, _, name = p.name.partition(args.sep)
         if len(name) == 0:
@@ -303,12 +310,17 @@ def process(args):
             continue
 
         builder.validate(p)
-        procedure = Procedure(module, name, p, tokenizer.is_read_only(p), sorted(tokenizer.errors(p)))
-        modules[procedure.module or "__init__"].append(procedure)
+        procedure = Procedure(module, name, p, tokenizer.is_read_only(p),
+                              sorted(tokenizer.errors(p)), tokenizer.returns(p))
+
+        module_name = procedure.module or "__init__"
+        modules[module_name].append(procedure)
+        has_union[module_name] = p.return_mod == "union"
 
     count = 0
     for module in modules:
-        with builder.create_api_output(args.outdir, module, tokenizer.structures(module)):
+        with builder.create_api_output(
+                args.outdir, module, tokenizer.structures(module), has_union[module]):
             for p in sorted(modules[module], key=lambda x: x.name):
                 builder.write_procedure(p)
                 count += 1
