@@ -299,7 +299,7 @@ def process(args):
     builder = create_builder(args.language)
 
     modules = defaultdict(list)
-    has_union = dict()
+    module_needs_union = set()
     for p in tokenizer.procedures():
         module, _, name = p.name.partition(args.sep)
         if len(name) == 0:
@@ -315,13 +315,15 @@ def process(args):
 
         module_name = procedure.module or "__init__"
         modules[module_name].append(procedure)
-        has_union[module_name] = p.return_mod == "union"
+        if p.return_mod == "union":
+            module_needs_union.add(module_name)
 
     count = 0
-    for module in modules:
+    for module_name in modules:
         with builder.create_api_output(
-                args.outdir, module, tokenizer.structures(module), has_union[module]):
-            for p in sorted(modules[module], key=lambda x: x.name):
+                args.outdir, module_name, tokenizer.structures(module_name),
+                module_name in module_needs_union):
+            for p in sorted(modules[module_name], key=lambda x: x.name):
                 builder.write_procedure(p)
                 count += 1
 

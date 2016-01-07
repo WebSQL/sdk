@@ -24,7 +24,7 @@ def readme():
 
 setup(
     name="wsql_sdk",
-    version="0.3.8",
+    version="0.3.9",
     description='The chain of tools, that to make work with SQL easier',
     packages=["wsql_sdk", "wsql_sdk._lang"],
     requires=["pyparsing"],

@@ -23,19 +23,23 @@ CREATE PROCEDURE `test_procedure1` ()
  COMMENT "args (c1 INT, c2 BINARY(255)); returns union"
 BEGIN
     SELECT 1 AS `a`;
-    SELECT 2 AS `b`;
+    CALL __test_procedure1();
     IF FOUND_ROWS() == 0 THEN CALL __throw("TestError", CONCAT("test error: ", "test")); END IF;
     CALL __throw("TestError", "test");
 END$$
 
 CREATE PROCEDURE `__test_procedure1` ()
 BEGIN
+    SELECT 2 AS `b`;
 END$$
 
 CREATE PROCEDURE `test.__procedure1` ()
 BEGIN
 END$$
 
+CREATE PROCEDURE `test_procedure2` ()
+BEGIN
+END$$
 """,
         "exceptions": """
 from wsql import UserError
