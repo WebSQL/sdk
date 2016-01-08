@@ -128,9 +128,11 @@ def include_for_structures(kinds):
 
 def declare_structure(kind, name, fields):
     """declare the structure"""
+    name = name.title().replace("_", "")
     if kind == 'ENUM':
         return "class {0}(Enum):\n    {1}".format(
-            name.title(), "\n    ".join('{0} = {1!r}'.format(x.lower(), x) for x in fields)
+            name,
+            "\n    ".join('{0} = {1!r}'.format(x.lower(), x) for x in fields)
         )
 
     return """\
@@ -145,4 +147,4 @@ class {0}(set):
 
     @property
     def value(self):
-        return self.__value""".format(name.title(), ", ".join(map(repr, fields)))
+        return self.__value""".format(name, ", ".join(map(repr, fields)))

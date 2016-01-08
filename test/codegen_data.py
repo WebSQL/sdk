@@ -324,7 +324,7 @@ def query(connection, i=None):
 -- CONSTANT CONST2 abc
 
 CREATE TABLE IF NOT EXISTS `table2` (
- c1 ENUM('one', 'two'), c2 SET('red', 'blue', 'green')
+ column_enum ENUM('one', 'two'), column_set SET('red', 'blue', 'green')
 );
 
 CREATE PROCEDURE `table2.query` (i BIGINT)
@@ -342,12 +342,12 @@ THIS_IS_CONST_1 = 1
 from enum import Enum
 
 
-class C1(Enum):
+class ColumnEnum(Enum):
     one = 'one'
     two = 'two'
 
 
-class C2(set):
+class ColumnSet(set):
     __choice = frozenset(('blue', 'green', 'red'))
 
     def __init__(self, v):
@@ -383,12 +383,12 @@ def query(connection, i=None):
 from enum import Enum
 
 
-class C1(Enum):
+class ColumnEnum(Enum):
     one = 'one'
     two = 'two'
 
 
-class C2(set):
+class ColumnSet(set):
     __choice = frozenset(('blue', 'green', 'red'))
 
     def __init__(self, v):
