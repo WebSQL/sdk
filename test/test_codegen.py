@@ -82,7 +82,6 @@ class TestCodeGen(TestCase):
                 code = opened_files[filename]
                 code.seek(0)
                 actual = code.read()
-                print(actual)
                 self.assertIn(data[lang], actual)
                 for n in ("constants", "exceptions"):
                     fn = n + ".py"

@@ -132,7 +132,7 @@ _THROW_EXPR = _CALL + _THROW + nestedExpr(content=_VALUE_LIST, ignoreExpr=None).
 
 _CALL_EXPR = _CALL + _PROCEDURE_NAME + _SKIP_TO_END
 
-_CONSTANT = _sql_comment(Keyword("CONSTANT")) + _ID + _VALUE
+_CONSTANT = _sql_comment(Keyword("CONSTANT")) + _ID + SkipTo(lineEnd, include=True).setResultsName("value")
 
 _CREATE_TABLE = _CREATE + _TABLE + Suppress(Optional(IF_NOT_EXISTS)) + _SQL_ID.setResultsName('name') + \
     SkipTo(";").setResultsName('body')
@@ -454,7 +454,7 @@ class SQLTokenizer:
 
     def on_constant(self, token):
         """catch constants"""
-        self._constants.append((token.name, token.value))
+        self._constants.append((token.name, token.value[0]))
 
     def on_table(self, tokens):
         """catch the table"""

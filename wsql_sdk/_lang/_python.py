@@ -114,7 +114,7 @@ def declare_constant(name, value):
         if value and value[0] not in ('"', "'"):
             int(value)
     except ValueError:
-        value = "'{0}'".format(value)
+        value = repr(value)
 
     return "\n{0} = {1}".format(name.upper(), value)
 
