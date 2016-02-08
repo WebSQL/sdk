@@ -223,7 +223,7 @@ class MacrosTokenizer:
             if token.name in self.variables:
                 warnings.warn('%d: macros %s already defined!' % (line, token.name))
 
-            value = self.variables[token.name] = self._recurisve_expand(token.value[0])
+            value = self.variables[token.name] = self._recurisve_expand(token.value)
             if not token.name.startswith("_"):
                 self.on_constant(token.name, value)
 
@@ -274,7 +274,7 @@ class MacrosTokenizer:
         if not self.suppress:
             self.conditions_stack.append(self.suppress)
             try:
-                self.suppress = not eval(token.condition[0], {'defined': lambda x: x in self.variables}, self.variables)
+                self.suppress = not eval(token.condition, {'defined': lambda x: x in self.variables}, self.variables)
             except Exception as e:
                 raise RuntimeError("Failed to evaluate expression: {0}, details: {1}".format(token.condition, e))
 
@@ -457,7 +457,7 @@ class SQLTokenizer:
 
     def on_constant(self, token):
         """catch constants"""
-        self._constants.append((token.name, token.value[0]))
+        self._constants.append((token.name, token.value))
 
     def on_table(self, tokens):
         """catch the table"""
