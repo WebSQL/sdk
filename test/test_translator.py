@@ -122,6 +122,11 @@ class TestTranslator(TestCase):
         self.trans.reset()
         self.assertRaises(ValueError, self.trans.parse, StringIO('#DEFINE f2(a,b) select * \\ \nfrom $a\n$f2(`table1`);'))
 
+    def test_expand_function(self):
+        self.trans.parse(StringIO('#DEFINE v 1\n#DEFINE f(a) select $a\n$f($v);'))
+        self.output.seek(0)
+        self.assertEqual("-- CONSTANT v 1\nselect 1;\n", self.output.read())
+
     def test_include(self):
         with mock.patch('builtins.open', lambda f, *args, **kwargs: _open_mock(f)):
             with mock.patch('os.listdir', _listdir_mock):

@@ -248,8 +248,8 @@ class MacrosTokenizer:
         macros = self.functions[token.name]
         if len(macros.body) == 0:
             return
-
-        args = dict(zip(macros.args, token.args[0]))
+        expanded_args = (x.startswith('$') and self.variables.get(x[1:], x) or x for x in token.args[0])
+        args = dict(zip(macros.args, expanded_args))
         if len(args) != len(macros.args):
             raise ValueError("%d: invalid number of parameters for %s, expected %s" % (line, token.name, macros.args))
 
