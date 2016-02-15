@@ -18,7 +18,7 @@ __author__ = "@bg"
 
 TEST_DATA = [
     {
-        "sql": b"""
+        "sql": """
 CREATE PROCEDURE `test_procedure1` ()
  COMMENT "args (c1 INT, c2 BINARY(255)); returns union"
 BEGIN
@@ -130,7 +130,7 @@ def test_procedure1(connection, args=None):
 
     },
     {
-        "sql": b"""
+        "sql": """
 CREATE PROCEDURE `test_procedure2` (c1 INT, c2 VARCHAR(255))
 BEGIN
     SELECT `a` FROM t; -- > array
@@ -176,7 +176,7 @@ def test_procedure2(connection, c1=None, c2=None):
 '''
     },
     {
-        "sql": b"""
+        "sql": """
 CREATE PROCEDURE `procedure3` ()
 BEGIN
     DELETE FROM t;
@@ -216,7 +216,7 @@ def procedure3(connection):
 '''
     },
     {
-        "sql": b"""
+        "sql": """
 CREATE PROCEDURE `table1.update` (i BIGINT)
 BEGIN
     SELECT 1 AS `a`; -- > object
@@ -268,7 +268,7 @@ def update(connection, i=None):
 '''
     },
     {
-        "sql": b"""
+        "sql": """
 CREATE PROCEDURE `table1.query` (i BIGINT) COMMENT "returns union"
 BEGIN
     SELECT 1 AS `a`; -- > object
@@ -319,7 +319,7 @@ def query(connection, i=None):
 '''
     },
     {
-        "sql": b"""
+        "sql": """
 -- CONSTANT THIS_IS_CONST_1 1
 -- CONSTANT CONST2 abc(1)
 

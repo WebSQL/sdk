@@ -60,7 +60,7 @@ class TestCodeGen(TestCase):
         for data in TEST_DATA:
             for lang in ("python3_aio", "python3"):
                 args = Dummy()
-                args.input = BytesIO(data["sql"])
+                args.input = StringIO(data["sql"])
                 args.language = lang
                 args.outdir = ""
                 args.sep = '.'
