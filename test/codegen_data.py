@@ -68,6 +68,7 @@ def test_procedure1(connection, args=None):
     :raises: TestError
     """
 
+    @transaction
     @coroutine
     def __query(__connection):
         __cursor = __connection.cursor()
@@ -109,6 +110,7 @@ def test_procedure1(connection, args=None):
     :raises: TestError
     """
 
+    @transaction
     def __query(__connection):
         with __connection.cursor() as __cursor:
             if args is None:
@@ -148,6 +150,7 @@ def test_procedure2(connection, c1=None, c2=None):
     :returns: [("a",)]
     """
 
+    @transaction
     @coroutine
     def __query(__connection):
         __cursor = __connection.cursor()
@@ -169,6 +172,7 @@ def test_procedure2(connection, c1=None, c2=None):
     :returns: [("a",)]
     """
 
+    @transaction
     def __query(__connection):
         with __connection.cursor() as __cursor:
             __cursor.callproc(b"test_procedure2", (c1, c2))
@@ -235,6 +239,7 @@ def update(connection, i=None):
     :returns: (("a",), [("b", "c")])
     """
 
+    @transaction
     @coroutine
     def __query(__connection):
         __cursor = __connection.cursor()
@@ -258,6 +263,7 @@ def update(connection, i=None):
     :returns: (("a",), [("b", "c")])
     """
 
+    @transaction
     def __query(__connection):
         with __connection.cursor() as __cursor:
             __cursor.callproc(b"table1.update", (i,))
@@ -287,6 +293,7 @@ def query(connection, i=None):
     :returns: ("a", "items.b", "items.c")
     """
 
+    @transaction
     @coroutine
     def __query(__connection):
         __cursor = __connection.cursor()
@@ -309,6 +316,7 @@ def query(connection, i=None):
     :returns: ("a", "items.b", "items.c")
     """
 
+    @transaction
     def __query(__connection):
         with __connection.cursor() as __cursor:
             __cursor.callproc(b"table1.query", (i,))
@@ -370,6 +378,7 @@ def query(connection, i=None):
     :param i: the i(BIGINT, IN)
     """
 
+    @transaction
     @coroutine
     def __query(__connection):
         __cursor = __connection.cursor()
@@ -410,6 +419,7 @@ def query(connection, i=None):
     :param i: the i(BIGINT, IN)
     """
 
+    @transaction
     def __query(__connection):
         with __connection.cursor() as __cursor:
             __cursor.callproc(b"table2.query", (i,))

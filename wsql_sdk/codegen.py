@@ -224,8 +224,7 @@ class Builder:
         self.write(self.syntax.procedure_open(procedure.name, args_decl))
 
         self.write_doc_string(procedure)
-        if not procedure.read_only:
-            self.write(self.syntax.transaction_open())
+        self.write(self.syntax.transaction_open())
 
         self.write(self.syntax.body_open())
         self.write(self.syntax.cursor_open())
@@ -238,8 +237,7 @@ class Builder:
         self.write(self.syntax.cursor_close())
         self.write(self.syntax.body_close())
 
-        if not procedure.read_only:
-            self.write(self.syntax.transaction_close())
+        self.write(self.syntax.transaction_close())
 
         self.write(self.syntax.procedure_close())
 
