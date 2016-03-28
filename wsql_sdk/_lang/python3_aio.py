@@ -42,9 +42,9 @@ def temporary_table(name, columns):
     place_holders = ', '.join(["%s"] * len(columns))
 
     return """\
-            if {0} is None:
+            if not {0}:
                 return
-            __args = ((x.get(y, None) for y in ({1})) for x in {0})
+            __args = ((x.get(y, None) for y in ({1},)) for x in {0})
             yield from __cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `{0}`;")
             yield from __cursor.execute(b"CREATE TEMPORARY TABLE `{0}`({2}) ENGINE=MEMORY;")
             yield from __cursor.executemany(b"INSERT INTO `{0}` ({3}) VALUES ({4});", __args)"""\

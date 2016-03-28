@@ -73,9 +73,9 @@ def test_procedure1(connection, args=None):
     def __query(__connection):
         __cursor = __connection.cursor()
         try:
-            if args is None:
+            if not args:
                 return
-            __args = ((x.get(y, None) for y in ("c1", "c2")) for x in args)
+            __args = ((x.get(y, None) for y in ("c1", "c2",)) for x in args)
             yield from __cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `args`;")
             yield from __cursor.execute(b"CREATE TEMPORARY TABLE `args`(`c1` INT, `c2` BINARY(255)) ENGINE=MEMORY;")
             yield from __cursor.executemany(b"INSERT INTO `args` (`c1`, `c2`) VALUES (%s, %s);", __args)
@@ -113,9 +113,9 @@ def test_procedure1(connection, args=None):
     @transaction
     def __query(__connection):
         with __connection.cursor() as __cursor:
-            if args is None:
+            if not args:
                 return
-            __args = ((x.get(y, None) for y in ("c1", "c2")) for x in args)
+            __args = ((x.get(y, None) for y in ("c1", "c2",)) for x in args)
             __cursor.execute(b"DROP TEMPORARY TABLE IF EXISTS `args`;")
             __cursor.execute(b"CREATE TEMPORARY TABLE `args`(`c1` INT, `c2` BINARY(255)) ENGINE=MEMORY;")
             __cursor.executemany(b"INSERT INTO `args` (`c1`, `c2`) VALUES (%s, %s);", __args)
