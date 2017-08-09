@@ -111,5 +111,7 @@ Python3
         except Error as e:
             raise handle_error(exceptions, e)
 
+Developed by using `PyCharm`_.
 
 .. _`WSQL`: http://www.mysql.com/
+.. _`PyCharm`: https://www.jetbrains.com/pycharm/
